@@ -17,7 +17,11 @@ As people who love eating and trying out new places, it can be incredibly diffic
 ## Architectural Diagram
 We will use rest API to take user input as well as mongodb as the database to store user and restaurant information.
 
-![WhenToEat Architectural Diagram](https://github.com/info441-sp24/final-project-WhenToEat/blob/main/public/img/User%20Flow%20Chart.jpg?raw=true)
+![WhenToEat Architectural Diagram](https://github.com/info441-sp24/final-project-WhenToEat/blob/main/public/img/User%20Flow%20Chart%20-%20User%20Flow%20Chart.jpg?raw=true)
+
+
+## Data Flow
+![WhenToEat Data Flow](https://github.com/info441-sp24/final-project-WhenToEat/blob/main/public/img/Data%20Flow.jpg?raw=true)
 
 ## User Stories
 | Priority | User | Description | Implementation |
@@ -46,7 +50,7 @@ We will use rest API to take user input as well as mongodb as the database to st
 Users:
 * Userid: string
 * Username: string
-* Friends: Array of Strings (User IDs)
+* Friends: string
 * History: Object
 * Points: Int
 
@@ -62,8 +66,3 @@ History:
 * Userid: string
 * Date: Date
 
-
-Wheel Sessions:
-* Restaurant Choices: Array of Strings (Restaurant Names)
-* Users: Array of Strings (User IDs)
-* Restaurant Weights: Array of Ints (Points voted on Restaurant)
