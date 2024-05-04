@@ -46,7 +46,7 @@ We will use rest API to take user input as well as mongodb as the database to st
 Users:
 * Userid: string
 * Username: string
-* Friends: string
+* Friends: Array of Strings (User IDs)
 * History: Object
 * Points: Int
 
@@ -61,3 +61,9 @@ History:
 * Restaurants: Array of Strings (Restaurant Names)
 * Userid: string
 * Date: Date
+
+
+Wheel Sessions:
+* Restaurant Choices: Array of Strings (Restaurant Names)
+* Users: Array of Strings (User IDs)
+* Restaurant Weights: Array of Ints (Points voted on Restaurant)
