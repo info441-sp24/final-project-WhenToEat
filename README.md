@@ -66,3 +66,7 @@ History:
 * Userid: string
 * Date: Date
 
+Wheel Sessions:
+* Restaurant Choices: Array of Strings (Restaurant Names)
+* Users: Array of Strings (User IDs)
+* Restaurant Weights: Array of Ints (Points voted on Restaurant)
