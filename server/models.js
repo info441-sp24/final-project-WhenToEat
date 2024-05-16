@@ -3,7 +3,7 @@ import mongoose from 'mongoose'
 let models = {}
 
 console.log("connecting to mongodb")
-await mongoose.connect("")
+await mongoose.connect("mongodb+srv://when2eat:when2eat@when2eat-main-cluster.qb4mkmc.mongodb.net/")
 
 console.log("successfully connected to mongodb")
 

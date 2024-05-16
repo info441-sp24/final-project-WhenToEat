@@ -25,9 +25,10 @@ function App() {
   );
 }
 
+// DEMO FOR AXIOS, REACT TO BACKEND API CALL!!
 async function loadInfo() {
   try {
-    const response = await axios.get("http://localhost:8080/friends");
+    const response = await axios.get("http://localhost:8080/api/friends");
     document.getElementById("info").innerHTML = response.data;
   } catch (error) {
     console.error("Error fetching data:", error);
