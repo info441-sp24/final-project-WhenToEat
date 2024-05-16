@@ -11,3 +11,23 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+.navigation {
+  position: fixed;
+  width: 100vw;
+  background-color: lightblue;
+  padding-top: 1rem;
+  z-index: 10;
+}
+
+.navlinks {
+  display: flex;
+  flex-direction: row;
+  font-size: 16px;
+  text-align: left;
+  gap: 1rem;
+}
+
+.wheel {
+  padding-top: 10rem;
+}
