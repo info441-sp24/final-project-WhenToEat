@@ -2,8 +2,10 @@ import express from 'express';
 import path from 'path';
 import cookieParser from 'cookie-parser';
 import logger from 'morgan';
+import cors from 'cors';
 
 import usersRouter from './routes/users.js';
+import friendsRouter from './routes/controllers/friends.js';
 
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
@@ -13,6 +15,7 @@ const __dirname = dirname(__filename);
 
 var app = express();
 
+app.use(cors())
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -20,5 +23,10 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/users', usersRouter);
+app.use('/friends', friendsRouter);
+
+app.listen(8080, () => {
+    console.log('server listening on port 8080')
+})
 
 export default app;
