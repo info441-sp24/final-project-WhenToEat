@@ -3,6 +3,7 @@ import path from 'path';
 import cookieParser from 'cookie-parser';
 import logger from 'morgan';
 import cors from 'cors';
+import enableWs from 'express-ws';
 
 // import WebAppAuthProvider from 'msal-node-wrapper'
 
@@ -35,6 +36,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 var app = express();
+enableWs(app);
 
 app.use(cors())
 app.use(logger('dev'));
@@ -78,5 +80,47 @@ app.listen(8080, () => {
 
 // });
 // app.use(authProvider.interactionErrorHandler());
+
+let socketCounter = 1
+let allSockets = {}
+
+app.ws("/wheelSocket", (ws, res) => {
+    let mySocketNum = socketCounter
+    socketCounter++
+    console.log("user " + mySocketNum + " connected via websocket")
+
+    allSockets[mySocketNum] = {
+        socket: ws,
+        name: mySocketNum
+    }
+
+    ws.on('message', msg => {
+        try {
+            const socketMsg = JSON.parse(msg)
+            if (socketMsg.action == "updateName") {
+                console.log("user " + allSockets[mySocketNum].name + " is trying to update name to " + socketMsg.name)
+                allSockets[mySocketNum].name = socketMsg.name
+                showLobby()
+            }
+        } catch (error) {
+            console.error("Websocket message received error: " + error)
+        }
+        
+    })
+
+    ws.on('close', () => {
+        console.log(`user ${mySocketNum} disconnected`)
+        delete allSockets[mySocketNum];
+        showLobby();
+    })
+})
+
+function showLobby() {
+    const lobbyNames = Object.values(allSockets).map(socketInfo => socketInfo.name);
+    console.log(lobbyNames)
+    // Object.values(lobbyNames).forEach(socketInfo => {
+    //     socketInfo.socket.send(socketInfo.name);
+    // });
+}
 
 export default app;
