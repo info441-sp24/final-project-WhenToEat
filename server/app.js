@@ -96,31 +96,42 @@ app.ws("/wheelSocket", (ws, res) => {
 
     ws.on('message', msg => {
         try {
-            const socketMsg = JSON.parse(msg)
-            if (socketMsg.action == "updateName") {
-                console.log("user " + allSockets[mySocketNum].name + " is trying to update name to " + socketMsg.name)
-                allSockets[mySocketNum].name = socketMsg.name
+            const socketMsg = JSON.parse(msg);
+            if (socketMsg.action === 'updateName') {
+                console.log(socketMsg.name + ' has joined the lobby');
+                allSockets[mySocketNum].name = socketMsg.name;
                 showLobby()
+                broadcastNotification(`${socketMsg.name} has joined the lobby`, 'nameUpdated', `${socketMsg.name}`);
             }
         } catch (error) {
-            console.error("Websocket message received error: " + error)
+            console.error('Websocket message received error: ' + error);
         }
-        
-    })
+    });
 
     ws.on('close', () => {
-        console.log(`user ${mySocketNum} disconnected`)
+        const disconnectedName = allSockets[mySocketNum].name;
+        console.log(disconnectedName + ' has disconnected :(');
         delete allSockets[mySocketNum];
-        showLobby();
-    })
+        broadcastNotification(`${disconnectedName} has disconnected`, 'nameDisconnected', `${disconnectedName}`);
+    });
 })
 
 function showLobby() {
     const lobbyNames = Object.values(allSockets).map(socketInfo => socketInfo.name);
     console.log(lobbyNames)
-    // Object.values(lobbyNames).forEach(socketInfo => {
-    //     socketInfo.socket.send(socketInfo.name);
-    // });
 }
+
+function broadcastNotification(message, action, name) {
+    const notification = JSON.stringify({
+        action: action,
+        message: message,
+        name: name
+    });
+    
+    for (let socketNum in allSockets) {
+        allSockets[socketNum].socket.send(notification);
+    }
+}
+
 
 export default app;
