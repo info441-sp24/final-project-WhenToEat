@@ -11,6 +11,7 @@ const usersSchema = new mongoose.Schema({
   username: String,
   email: String,
   points: Number,
+  friends: [String],
   created_date: Date
 })
 
