@@ -74,9 +74,10 @@ const friendshipSchema = new mongoose.Schema({
 models.Friendship = mongoose.model('Friendship', friendshipSchema)
 
 const lobbiesSchema = new mongoose.Schema({
-  lobby_id: String,
+  lobby_name: String,
   users: [String],
-  choices: [String]
+  choices: [String],
+  status: Boolean // true == open, false == closed
 })
 
 models.Lobbies = mongoose.model('Lobbies', lobbiesSchema)
