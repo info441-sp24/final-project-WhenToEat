@@ -10,7 +10,7 @@ console.log("successfully connected to mongodb")
 const usersSchema = new mongoose.Schema({
   username: String,
   email: String,
-  points: Number,
+  points: { type: Number, default: 5 },
   friends: [String],
   created_date: Date
 })
