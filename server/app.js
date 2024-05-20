@@ -5,6 +5,9 @@ import logger from 'morgan';
 import cors from 'cors';
 import enableWs from 'express-ws';
 
+import httpProxyMiddleware from 'http-proxy-middleware'
+const createProxyMiddleware = httpProxyMiddleware.createProxyMiddleware;
+
 // import WebAppAuthProvider from 'msal-node-wrapper'
 
 // const authConfig = {
@@ -43,7 +46,7 @@ app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
+// app.use(express.static(path.join(__dirname, 'public')));
 
 // const oneDay = 1000 * 60 * 60 * 24
 // app.use(sessions({
@@ -66,6 +69,8 @@ app.use('/api', apiRouter);
 app.listen(8080, () => {
     console.log('server listening on port 8080')
 })
+
+app.use('/*', createProxyMiddleware({target: 'http://localhost:4000'}))
 
 // app.get('/signin', (req, res, next) => {
 //     return req.authContext.login({
