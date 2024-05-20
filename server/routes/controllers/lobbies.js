@@ -91,7 +91,7 @@ router.post("/", async (req, res) => {
                 lobby_name: req.body.name,
                 users: [],
                 choices: [],
-                status: true
+                status: false
             })
             await newLobby.save()
             res.json({"status": "success"})
@@ -102,12 +102,33 @@ router.post("/", async (req, res) => {
     }
 })
 
+router.post("/spinWheel", async (req, res) => {
+    try {
+        // get the winner
+        const lobbyToClose = await req.models.Lobbies.findOne({ lobby_name: req.body.name });
+        let users = lobbyToClose.users
+        if (users.length < 2) {
+            res.json({"status" : "not enough"})
+            return
+        }
+        let randomNum = Math.floor(Math.random() * users.length)
+        res.json({"status": "success", "winner": users[randomNum] })
+    } catch (error) {
+        console.log("Error:", error);
+        res.status(500).json({"status": "error", "error": error});
+    }
+})
+
 router.post("/close", async (req, res) => {
     try {
-        // console.log(req.body.name)
         const lobbyToClose = await req.models.Lobbies.findOne({ lobby_name: req.body.name });
-        lobbyToClose.status = false
-        await lobbyToClose.save()
+        if (lobbyToClose.users.length < 2) {
+            await req.models.Lobbies.deleteOne({ lobby_name: lobbyToClose });
+        } else {
+            lobbyToClose.status = false
+            await lobbyToClose.save()
+        }
+        broadcastNotification(`Host (${allSockets[1].name}) has closed the lobby`, 'lobbyClosed', ``);
         res.json({"status": "success"})
     } catch (error) {
         console.log("Error:", error);
@@ -118,6 +139,9 @@ router.post("/close", async (req, res) => {
 router.post("/addName", async (req, res) => {
     try {
         let lobbyNewUser = await req.models.Lobbies.findOne({ lobby_name: req.body.lobby_name });
+        if (lobbyNewUser.users.length == 0) {
+            lobbyNewUser.status = true
+        }
         lobbyNewUser.users.push(req.body.name)
         lobbyNewUser.save()
         res.json({"status": "success"})
