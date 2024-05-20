@@ -45,27 +45,19 @@ router.post("/add", async (req, res) => {
 router.get("/list", async (req, res) => {
     const { username } = req.query;
 
-  if (!username) {
+    if (!username) {
     return res.status(400).json({ error: 'Username is required' });
-  }
+    }
 
-  try {
+    try {
     const user = await models.Users.findOne({ username });
 
     if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+        return res.status(404).json({ error: 'User not found' });
     }
 
-    const friends = await models.Users.find({ _id: { $in: user.friends } });
-    
-    const friendList = friends.map(friend => ({
-      username: friend.username,
-      email: friend.email,
-      points: friend.points,
-      created_date: friend.created_date
-    }));
-
-    res.status(200).json({ friends: friendList });
+    const friends = user.friends;
+    res.status(200).json({ friends });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Internal server error' });
