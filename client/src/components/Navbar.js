@@ -17,6 +17,16 @@ const Navbar = () => {
 						Wheel
 					</NavLink>
 				</li>
+				<li>
+					<NavLink to=''>
+						Explore
+					</NavLink>
+				</li>
+				<li>
+					<NavLink to="">
+						Profile
+					</NavLink>
+				</li>
             </ul>
         </nav>
         )

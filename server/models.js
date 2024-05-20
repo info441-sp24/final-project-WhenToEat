@@ -72,6 +72,14 @@ const friendshipSchema = new mongoose.Schema({
 
 models.Friendship = mongoose.model('Friendship', friendshipSchema)
 
+const lobbiesSchema = new mongoose.Schema({
+  lobby_id: String,
+  users: [String],
+  choices: [String]
+})
+
+models.Lobbies = mongoose.model('Lobbies', lobbiesSchema)
+
 console.log("mongoose model User History created")
 
 
