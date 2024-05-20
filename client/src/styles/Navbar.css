@@ -24,21 +24,40 @@ a:active {
 
 .navigation {
 	display: flex;
-}
-
-.navigation {
+	justify-content: space-between;
 	position: fixed;
 	width: 100vw;
 	background-color: lightblue;
 	z-index: 10;
 }
+
   
 .navlinks {
 	display: flex;
 	flex-direction: row;
-	font-size: 16px;
+	font-size: 12px;
 	text-align: left;
 	gap: 1rem;
+}
+
+.navcontent {
+	display: flex;
+}
+
+.authBtns {
+	margin-top: 1.25rem;
+	margin-right: 1rem;
+}
+
+.authBtns a {
+	background-color: white;
+	padding: 0.5rem;
+	border-radius: 15px;
+	border: 1px solid black;
+}
+
+.authBtns a:hover {
+	background-color: #eee;
 }
 
 img {
