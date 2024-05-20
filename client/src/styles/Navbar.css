@@ -1,0 +1,47 @@
+li {
+    list-style-type: none;
+    font-size: 2rem;
+    color:black
+}
+
+a:link {
+	text-decoration: none;
+}
+
+a:visited {
+	text-decoration: none;
+	color: #000000;
+}
+
+a:hover {
+	text-decoration: none;
+	color: #47a1ad;
+}
+
+a:active {
+	text-decoration: none;
+}
+
+.navigation {
+	display: flex;
+}
+
+.navigation {
+	position: fixed;
+	width: 100vw;
+	background-color: lightblue;
+	z-index: 10;
+}
+  
+.navlinks {
+	display: flex;
+	flex-direction: row;
+	font-size: 16px;
+	text-align: left;
+	gap: 1rem;
+}
+
+img {
+	padding-top: .3rem;
+	height: 4rem;
+}

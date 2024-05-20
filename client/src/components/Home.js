@@ -2,7 +2,8 @@ import axios from 'axios';
 const Home = () => {
     return (
       <div>
-        <div id="info"></div>
+        <h1>When2Eat</h1>
+        <div id="info"><br /></div>
         <button onClick={loadInfo}>YO</button>
       </div>
     )
@@ -11,7 +12,7 @@ const Home = () => {
   
 async function loadInfo() {
     try {
-      const response = await axios.get("http://localhost:8080/friends");
+      const response = await axios.get("http://localhost:8080/api/friends");
       document.getElementById("info").innerHTML = response.data;
     } catch (error) {
       console.error("Error fetching data:", error);

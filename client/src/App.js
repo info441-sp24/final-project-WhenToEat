@@ -8,9 +8,7 @@ function App() {
       <main>
         <Outlet />
       </main>
-    </>
-
-        
+    </>     
   );
 }
 
