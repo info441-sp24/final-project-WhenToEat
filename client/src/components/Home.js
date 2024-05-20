@@ -1,8 +1,10 @@
 import axios from 'axios';
+import '../styles/Home.css'
 const Home = () => {
     return (
-      <div>
-        <h1>When2Eat</h1>
+      <div className="home">
+        <h1>Welcome to When2Eat!</h1>
+        <p>The one stop place to fix the indecisiveness of finding restaurants and eating out.</p>
         <div id="info"><br /></div>
         <button onClick={loadInfo}>YO</button>
       </div>
