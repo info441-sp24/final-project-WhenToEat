@@ -6,6 +6,8 @@ import App from './App';
 import Error from './components/Error'
 import Home from './components/Home'
 import Wheel from './components/Wheel'
+import Explore from './components/Explore'
+import Profile from './components/Profile'
 
 const router = createHashRouter([
   {
@@ -19,6 +21,14 @@ const router = createHashRouter([
       {
         path: '/wheel',
         element: <Wheel />
+      },
+      {
+        path: '/explore',
+        element: <Explore />
+      },
+      {
+        path: '/profile',
+        element: <Profile />
       },
       {
         path: '*',
