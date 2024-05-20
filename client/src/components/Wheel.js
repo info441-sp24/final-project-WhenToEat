@@ -157,13 +157,13 @@ const Wheel = () => {
                         <h2>Create a New Lobby:</h2>
                         <input ref={lobbyNameRef} placeholder="Enter New Lobby Name" /><br />
                         <button onClick={createLobby}>Create Lobby</button>
-                        <p className="error">{existLobbyError}</p>
+                        <p className="wheel-error">{existLobbyError}</p>
                     </div>
                     <div className="join-lobby">
                         <h2>Or Join Your Friend's Lobby:</h2>
                         <input ref={joinLobbyRef} placeholder="Enter Friend's Lobby Name" /><br />
                         <button onClick={joinLobby}>Join Lobby</button>
-                        <p className="error">{joinLobbyError}</p>
+                        <p className="wheel-error">{joinLobbyError}</p>
                     </div>
                 </div>
             )}
@@ -179,7 +179,7 @@ const Wheel = () => {
                         <div className="join-wheel">
                             <input ref={nameInputRef} placeholder='Your Name' /><br />
                             <button onClick={addName}>Join the Wheel!</button>
-                            <p className="error">{noNameError}</p>
+                            <p className="wheel-error">{noNameError}</p>
                         </div>
                     )}
                     <h2>Lobby Notifications:</h2>
@@ -199,7 +199,7 @@ const Wheel = () => {
                     { showSpinBtn && (
                         <button onClick={spinWheel} className='spin-wheel'>Spin The Wheel!</button>
                     )}
-                    <p className='error'>{spinError}</p>
+                    <p className='wheel-error'>{spinError}</p>
                 </div>
             )}
             <div className={`popup ${showWinnerPopup ? 'show' : ''}`}>
