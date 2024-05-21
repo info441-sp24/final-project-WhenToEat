@@ -13,11 +13,11 @@ router.get('/myIdentity', function (req, res, next) {
             "status": "loggedin",
             "userInfo": userInfo
         });
-    } else [
+    } else {
         res.send({ 
             "status": "loggedout"
         })
-    ]
+    }
 });
 
 export default router;
