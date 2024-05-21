@@ -9,6 +9,7 @@ const Wheel = () => {
     const nameInputRef = useRef(null);
     const joinLobbyRef = useRef(null);
     const lobbyNameRef = useRef(null);
+    const restaurantInputRef = useRef(null);
     const [notifications, setNotifications] = useState([]);
     const [joinedLobby, setJoinedLobby] = useState(false);
     const [joinedWheel, setJoinedWheel] = useState(false);
@@ -17,6 +18,7 @@ const Wheel = () => {
     const [showSpinBtn, setShowSpinBtn] = useState(true);
     const [lobby, setLobby] = useState([]);
     const [noNameError, setNoNameError] = useState('');
+    const [noRestaurantError, setNoRestaurantError] = useState('');
     const [spinError, setSpinError] = useState('');
     const [existLobbyError, setExistLobbyError] = useState('');
     const [lastLobbyName, setLastLobbyName] = useState('');
@@ -84,6 +86,14 @@ const Wheel = () => {
             setJoinLobbyError('Lobby name does not exist');
         }
     };
+
+    const addRestaurant = async () => {
+        const restaurant = restaurantInputRef.current.value.trim();
+        if (restaurant.length < 1) {
+            setNoRestaurantError("Restaurant cannot be empty!");
+            return;
+        }
+    }
 
     const addName = async () => {
         const name = nameInputRef.current.value.trim();
@@ -204,6 +214,15 @@ const Wheel = () => {
                             <div key={index} className="lobby-name">{name}</div>
                         ))}
                     </div><br />
+                    {joinedWheel && (
+                        <>
+                        <h2>Add a Restaurant</h2>
+                        <div className="restaurants">
+                            <input ref={restaurantInputRef} placeholder='Restaurant Name' /> <br />
+                            <button onClick={addRestaurant}>Add Restaurant!</button>
+                            <p className="wheel-error">{noRestaurantError}</p>
+                        </div>
+                        </>)} <br />
                     { showSpinBtn && (
                         <button onClick={spinWheel} className='spin-wheel'>Spin The Wheel!</button>
                     )}
