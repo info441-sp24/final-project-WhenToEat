@@ -23,7 +23,8 @@ router.ws("/wheelSocket", (ws, res) => {
                     mySocketNum = socketCounter++;
                     allSockets[myLobbyId][mySocketNum] = {
                         socket: ws,
-                        name: mySocketNum
+                        name: mySocketNum,
+                        restaurant: ""
                     };
                     console.log(`User ${mySocketNum} connected to lobby ${myLobbyId} via websocket`);
                     break;
@@ -31,8 +32,10 @@ router.ws("/wheelSocket", (ws, res) => {
                     console.log(`name: ${socketMsg.name}  lobbyId: ${myLobbyId}`)
                     if (myLobbyId && allSockets[myLobbyId][mySocketNum]) {
                         allSockets[myLobbyId][mySocketNum].name = socketMsg.name;
+                        allSockets[myLobbyId][mySocketNum].restaurant = socketMsg.restaurant;
                         console.log(`User ${mySocketNum} in lobby ${myLobbyId} updated name to ${socketMsg.name}`);
-                        broadcastNotification(myLobbyId, `${socketMsg.name} has joined the lobby`, 'nameUpdated', socketMsg.name);
+                        console.log(`User ${mySocketNum} in lobby ${myLobbyId} updated restaurant to ${socketMsg.restaurant}`);
+                        broadcastNotification(myLobbyId, `${socketMsg.name} has joined the lobby (${socketMsg.restaurant})`, 'nameUpdated', socketMsg.name, socketMsg.restaurant);
                     }
                     break;
             }
@@ -45,7 +48,7 @@ router.ws("/wheelSocket", (ws, res) => {
     ws.on('close', () => {
         if (myLobbyId && mySocketNum && allSockets[myLobbyId] && allSockets[myLobbyId][mySocketNum]) {
             console.log(`User ${mySocketNum} from lobby ${myLobbyId} has disconnected`);
-            broadcastNotification(myLobbyId, `${allSockets[myLobbyId][mySocketNum].name} has disconnected`, 'nameDisconnected', allSockets[myLobbyId][mySocketNum].name);
+            broadcastNotification(myLobbyId, `${allSockets[myLobbyId][mySocketNum].name} has disconnected`, 'nameDisconnected', allSockets[myLobbyId][mySocketNum].name, "");
             delete allSockets[myLobbyId][mySocketNum];
             if (Object.keys(allSockets[myLobbyId]).length === 0) {
                 delete allSockets[myLobbyId];
@@ -54,11 +57,12 @@ router.ws("/wheelSocket", (ws, res) => {
     });
 })
 
-function broadcastNotification(lobbyId, message, action, name) {
+function broadcastNotification(lobbyId, message, action, name, choice) {
     const notification = JSON.stringify({
         action: action,
         message: message,
-        name: name
+        name: name,
+        choice: choice
     });
 
     if (allSockets[lobbyId]) {
@@ -108,13 +112,13 @@ router.post("/spinWheel", async (req, res) => {
         // get the winner
         const lobbyToSpin = await req.models.Lobbies.findOne({ lobby_name: req.body.name });
         console.log("users in lobby:", lobbyToSpin.users, "notification list:", req.body.notis);
-        let users = lobbyToSpin.users
-        if (users.length < 2) {
+        let choices = lobbyToSpin.choices
+        if (choices.length < 2) {
             res.json({"status" : "not enough"})
             return
         }
-        let randomNum = Math.floor(Math.random() * users.length)
-        res.json({"status": "success", "winner": users[randomNum] })
+        let randomNum = Math.floor(Math.random() * choices.length)
+        res.json({"status": "success", "winner": choices[randomNum].restaurant })
     } catch (error) {
         console.log("Error:", error);
         res.status(500).json({"status": "error", "error": error});
@@ -130,7 +134,7 @@ router.post("/close", async (req, res) => {
             lobbyToClose.status = false
             await lobbyToClose.save()
         }
-        broadcastNotification(lobbyToClose._id, `Host (${lobbyToClose.users[0]}) has closed the lobby`, 'lobbyClosed', ``);
+        broadcastNotification(lobbyToClose._id, `Host (${lobbyToClose.users[0]}) has closed the lobby`, 'lobbyClosed', "", "");
         res.json({"status": "success"})
     } catch (error) {
         console.log("Error:", error);
@@ -141,11 +145,14 @@ router.post("/close", async (req, res) => {
 router.post("/addName", async (req, res) => {
     try {
         let lobbyNewUser = await req.models.Lobbies.findOne({ lobby_name: req.body.lobby_name });
-        console.log(lobbyNewUser);
-        if (lobbyNewUser.users.length == 0) {
-            lobbyNewUser.status = true
-        }
         lobbyNewUser.users.push(req.body.name)
+        const newChoice = {
+            user_added: req.body.name,
+            restaurant_id: "placeholder",
+            restaurant: req.body.restaurant,
+            weight: 1
+        };
+        lobbyNewUser.choices.push(newChoice)
         lobbyNewUser.save()
         res.json({"status": "success"})
     } catch (error) {

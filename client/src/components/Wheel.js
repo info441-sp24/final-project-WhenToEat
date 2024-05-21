@@ -9,13 +9,15 @@ const Wheel = () => {
     const nameInputRef = useRef(null);
     const joinLobbyRef = useRef(null);
     const lobbyNameRef = useRef(null);
+    const restaurantInputRef = useRef(null);
     const [notifications, setNotifications] = useState([]);
     const [joinedLobby, setJoinedLobby] = useState(false);
     const [joinedWheel, setJoinedWheel] = useState(false);
     const [showWinnerPopup, setShowWinnerPopup] = useState(false);
     const [showCloseLobby, setShowCloseLobby] = useState(false);
     const [showSpinBtn, setShowSpinBtn] = useState(true);
-    const [lobby, setLobby] = useState([]);
+    const [users, setUsers] = useState([]);
+    const [restaurants, setRestaurants] = useState([]);
     const [noNameError, setNoNameError] = useState('');
     const [spinError, setSpinError] = useState('');
     const [existLobbyError, setExistLobbyError] = useState('');
@@ -27,12 +29,13 @@ const Wheel = () => {
         ws.onmessage = (event) => {
             const data = JSON.parse(event.data);
             if (data.action === 'nameUpdated') {
-                console.log(data.name, data.message)
-                setLobby(prevLobby => [...prevLobby, data.name]);
+                setRestaurants(prevRestaurants => [...prevRestaurants, data.choice])
+                setUsers(prevLobby => [...prevLobby, data.name]);
                 setNotifications(prev => [...prev, data.message]);
             } else if (data.action === 'nameDisconnected') {
                 console.log(data.name, data.message)
-                setLobby(prevLobby => prevLobby.filter(name => name !== data.name));
+                setRestaurants(prevRestaurants => prevRestaurants.filter(name => name !== data.choice))
+                setUsers(prevLobby => prevLobby.filter(name => name !== data.name));
                 setNotifications(prev => [...prev, data.message]);
             } else if (data.action === 'lobbyClosed') {
                 setNotifications(prev => [...prev, data.message]);
@@ -72,7 +75,9 @@ const Wheel = () => {
         let response = await axios.get(`http://localhost:8080/api/lobbies?lobbyName=${joinLobbyRef.current.value}`);
         if (response.data.status === "success") {
             setNotifications([]);
-            setLobby(response.data.users);
+            setUsers(response.data.users);
+            setRestaurants(response.data.choices);
+            console.log(users)
             setShowSpinBtn(false);
             setJoinedLobby(true);
             setLastLobbyName(joinLobbyRef.current.value);
@@ -89,26 +94,27 @@ const Wheel = () => {
 
     const addName = async () => {
         const name = nameInputRef.current.value.trim();
-        if (name.length < 1) {
-            setNoNameError("Name cannot be empty!");
+        const restaurant = restaurantInputRef.current.value.trim();
+        if (name.length < 1 || restaurant.length < 1) {
+            setNoNameError("Both inputs must be filled out!");
             return;
         }
         ws.send(JSON.stringify({
             action: 'updateName',
             name: name,
-            lobbyName: lastLobbyName
+            restaurant: restaurant
         }));
         await axios.post('http://localhost:8080/api/lobbies/addName', {
             lobby_name: lastLobbyName,
-            name: name
+            name: name,
+            restaurant: restaurant
         });
         setJoinedWheel(true);
     };
 
     const spinWheel = async () => {
         let response = await axios.post('http://localhost:8080/api/lobbies/spinWheel', {
-            name: lastLobbyName,
-            notis: notifications// take out later
+            name: lastLobbyName
         });
         if (response.data.status === "not enough") {
             setSpinError("Need at least 2 participants!")
@@ -142,7 +148,7 @@ const Wheel = () => {
 
     const handleLobbyClosed = () => {;
         setNotifications([])
-        setLobby([])
+        setUsers([])
         setJoinedLobby(false);
         setJoinedWheel(false);
         setShowWinnerPopup(false);
@@ -189,6 +195,7 @@ const Wheel = () => {
                     {!joinedWheel && (
                         <div className="join-wheel">
                             <input ref={nameInputRef} placeholder='Your Name' /><br />
+                            <input ref={restaurantInputRef} placeholder='Choose a Restaurant' /><br />
                             <button onClick={addName}>Join the Wheel!</button>
                             <p className="wheel-error">{noNameError}</p>
                         </div>
@@ -203,8 +210,10 @@ const Wheel = () => {
                     </div>
                     <h2>People in lobby:</h2>
                     <div className="lobby-names">
-                        {lobby.map((name, index) => (
-                            <div key={index} className="lobby-name">{name}</div>
+                        {users.map((name, index) => (
+                            <div key={index} className="lobby-name">
+                                {name}'s Restaurant : <span style={{ textDecoration: 'underline' }}>{restaurants[index] || 'No choice selected'}</span>
+                            </div>
                         ))}
                     </div><br />
                     { showSpinBtn && (
@@ -214,7 +223,7 @@ const Wheel = () => {
                 </div>
             )}
             <div className={`popup ${showWinnerPopup ? 'show' : ''}`}>
-                <h2>The winner is {winner}'s restaurant!</h2>
+                <h2>The winner is {winner}</h2>
                 <button onClick={closeWinnerPopup}>Close</button>
             </div>
         </div>
