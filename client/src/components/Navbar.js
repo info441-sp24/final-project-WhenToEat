@@ -31,7 +31,7 @@ const Navbar = () => {
 				</ul>
 			</div>
 			<div className="authBtns">
-				<NavLink to="signin">Sign in</NavLink>
+				<NavLink to="/signin">Sign in</NavLink>
 			</div>
         </nav>
         )
