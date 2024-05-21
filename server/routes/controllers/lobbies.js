@@ -16,17 +16,19 @@ router.ws("/wheelSocket", (ws, res) => {
             switch (socketMsg.action) {
                 case 'joinLobby':
                     myLobbyId = socketMsg.lobbyId;
+                    console.log("Lobby id: ", myLobbyId)
                     if (!allSockets[myLobbyId]) {
                         allSockets[myLobbyId] = {};
                     }
                     mySocketNum = socketCounter++;
                     allSockets[myLobbyId][mySocketNum] = {
                         socket: ws,
-                        name: undefined
+                        name: mySocketNum
                     };
                     console.log(`User ${mySocketNum} connected to lobby ${myLobbyId} via websocket`);
                     break;
                 case 'updateName':
+                    console.log(`name: ${socketMsg.name}  lobbyId: ${myLobbyId}`)
                     if (myLobbyId && allSockets[myLobbyId][mySocketNum]) {
                         allSockets[myLobbyId][mySocketNum].name = socketMsg.name;
                         console.log(`User ${mySocketNum} in lobby ${myLobbyId} updated name to ${socketMsg.name}`);
@@ -43,6 +45,7 @@ router.ws("/wheelSocket", (ws, res) => {
     ws.on('close', () => {
         if (myLobbyId && mySocketNum && allSockets[myLobbyId] && allSockets[myLobbyId][mySocketNum]) {
             console.log(`User ${mySocketNum} from lobby ${myLobbyId} has disconnected`);
+            broadcastNotification(myLobbyId, `${allSockets[myLobbyId][mySocketNum].name} has disconnected`, 'nameDisconnected', allSockets[myLobbyId][mySocketNum].name);
             delete allSockets[myLobbyId][mySocketNum];
             if (Object.keys(allSockets[myLobbyId]).length === 0) {
                 delete allSockets[myLobbyId];
@@ -51,16 +54,6 @@ router.ws("/wheelSocket", (ws, res) => {
     });
 })
 
-// async function showLobby(lobbyName) {
-//     try {
-//         let response = await fetch(`/api/lobbies/users?lobbyName=${lobbyName}`);
-//         console.log(response.users);
-//         return response.users;
-//     } catch (error) {
-//         console.error('Error fetching lobby:', error);
-//         throw error;
-//     }
-// }
 function broadcastNotification(lobbyId, message, action, name) {
     const notification = JSON.stringify({
         action: action,
@@ -81,7 +74,7 @@ router.get("/", async (req, res) => {
         const existingLobby = await req.models.Lobbies.findOne({ lobby_name: lobbyName });
         if (existingLobby && existingLobby.status) {
             existingLobby.save()
-            return res.json({ "status": "success", "users": existingLobby.users, "choices": existingLobby.choices})
+            return res.json({ "status": "success", "users": existingLobby.users, "lobbyId": existingLobby._id, "choices": existingLobby.choices})
         } else if (existingLobby && !existingLobby.status) {
             return res.json({ "status": "closed" })
         } else {
@@ -113,8 +106,9 @@ router.post("/", async (req, res) => {
 router.post("/spinWheel", async (req, res) => {
     try {
         // get the winner
-        const lobbyToClose = await req.models.Lobbies.findOne({ lobby_name: req.body.name });
-        let users = lobbyToClose.users
+        const lobbyToSpin = await req.models.Lobbies.findOne({ lobby_name: req.body.name });
+        console.log("users in lobby:", lobbyToSpin.users, "notification list:", req.body.notis);
+        let users = lobbyToSpin.users
         if (users.length < 2) {
             res.json({"status" : "not enough"})
             return
@@ -131,12 +125,12 @@ router.post("/close", async (req, res) => {
     try {
         const lobbyToClose = await req.models.Lobbies.findOne({ lobby_name: req.body.name });
         if (lobbyToClose.users.length < 2) {
-            await req.models.Lobbies.deleteOne({ lobby_name: lobbyToClose });
+            await req.models.Lobbies.deleteOne({ lobby_name: lobbyToClose.lobby_name });
         } else {
             lobbyToClose.status = false
             await lobbyToClose.save()
         }
-        broadcastNotification(lobbyToClose._id, `Host has closed the lobby`, 'lobbyClosed', ``);
+        broadcastNotification(lobbyToClose._id, `Host (${lobbyToClose.users[0]}) has closed the lobby`, 'lobbyClosed', ``);
         res.json({"status": "success"})
     } catch (error) {
         console.log("Error:", error);
