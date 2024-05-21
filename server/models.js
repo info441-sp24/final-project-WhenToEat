@@ -43,16 +43,6 @@ models.Wheels = mongoose.model('Wheels', wheelsSchema);
 
 console.log("mongoose model Wheels created");
 
-const wheels_entriesSchema = new mongoose.Schema({
-  wheel_id: String,
-  restaurant_id: String,
-  weight: Number
-});
-
-models.WheelsEntries = mongoose.model('Wheels Entries', wheels_entriesSchema);
-
-console.log("mongoose model Wheels Entries created");
-
 const user_historySchema = new mongoose.Schema({
   user_id: String,
   restaurant_id: String,
@@ -73,10 +63,17 @@ const friendshipSchema = new mongoose.Schema({
 
 models.Friendship = mongoose.model('Friendship', friendshipSchema);
 
+const wheels_entriesSchema = new mongoose.Schema({
+  user_added: String,
+  restaurant_id: String,
+  restaurant: String,
+  weight: Number
+});
+
 const lobbiesSchema = new mongoose.Schema({
   lobby_name: String,
   users: [String],
-  choices: [String],
+  choices: [wheels_entriesSchema],
   status: Boolean // true == open, false == closed
 });
 

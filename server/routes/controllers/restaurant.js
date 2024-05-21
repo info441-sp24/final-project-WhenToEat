@@ -33,12 +33,7 @@ router.get("/explore", async (req, res) => {
         res.status(500).json({ error: 'Internal server error' });
     }
 });
-router.post("/add", async (req, res) => {
-    // Logic to add a new restaurant
-});
-router.post("/random", async (req, res) => {
-    // Logic to get a random restaurant
-});
+
 export default router;
 
 
