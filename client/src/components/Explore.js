@@ -61,7 +61,7 @@ const Explore = () => {
                 selectedRating: selectedRating.join(','),
             });
 
-            const response = await fetch(`/api/explore?${queryParams.toString()}`);
+            const response = await fetch(`/api/search?${queryParams.toString()}`);
             if (!response.ok) {
                 throw new Error('Network response was not ok');
             }

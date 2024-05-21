@@ -1,57 +1,44 @@
 import express from 'express';
-import models from '../../models.js'; // Import the models object
+import models from '../../models.js'; 
 const router = express.Router();
-
-router.get("/", async (req, res) => {
-    const { term, location, cuisine, priceRange, rating } = req.query;
-
+router.get("/explore", async (req, res) => {
+    const { searchQuery, selectedCuisine, selectedPriceRange, selectedRating } = req.query;
     try {
         let query = {};
-
-        // Check if any filters are provided
-        if (term && location) {
-            query = {
-                ...query,
-                $or: [
-                    { name: { $regex: new RegExp(term, 'i') } }, 
-                    { address: { $regex: new RegExp(location, 'i') } } 
-                ]
-            };
+        if (searchQuery) {
+            query.$or = [
+                { name: { $regex: new RegExp(searchQuery, 'i') } },
+                { address: { $regex: new RegExp(searchQuery, 'i') } }
+            ];
         }
-        if (cuisine) {
-            query.cuisine = cuisine;
+        if (selectedCuisine) {
+            query.cuisine = selectedCuisine;
         }
-        if (priceRange) {
-            query.price_range = priceRange; 
+        if (selectedPriceRange) {
+            query.price_range = { $in: selectedPriceRange.split(',') };
         }
-        if (rating) {
-            query.rating = { $gte: parseInt(rating) }; 
+        if (selectedRating) {
+            query.rating = { $in: selectedRating.split(',').map(Number) };
         }
-
         let restaurants;
 
-        // Check if any filters are applied
         if (Object.keys(query).length === 0) {
-            // No filters applied, fetch all restaurants
             restaurants = await models.Restaurants.find({});
         } else {
-            // Apply filters and fetch restaurants
             restaurants = await models.Restaurants.find(query);
         }
-
         res.status(200).json(restaurants);
     } catch (error) {
         console.error('Error fetching or filtering restaurants:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 });
-
 router.post("/add", async (req, res) => {
     // Logic to add a new restaurant
 });
-
 router.post("/random", async (req, res) => {
     // Logic to get a random restaurant
 });
-
 export default router;
+
+
