@@ -31,7 +31,7 @@ const Navbar = () => {
 				</ul>
 			</div>
 			<div className="authBtns">
-				<NavLink to="/signin">Sign in</NavLink>
+				<a href="http://localhost:8080/signin">Sign in</a>
 			</div>
         </nav>
         )

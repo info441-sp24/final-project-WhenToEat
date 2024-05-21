@@ -12,7 +12,7 @@ const Profile = () => {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const response = await axios.get(`/api/users?username=${username}`);
+        const response = await axios.get(`/api/userInfo?username=${username}`);
         if (response.data) {
           setUser(response.data);
           // setEditedName(response.data.name);
@@ -48,12 +48,12 @@ const Profile = () => {
   //   }
   // };
 
-  // if (!user) return <div>Please sign-in first</div>;
+  if (!user) return <div>Please sign-in first</div>;
 
   return (
     <div>
       <div>
-        <h1>{user.name}</h1>
+        <h1>{user.username}</h1>
         <p>Points: {user.points}</p>
         {/* <button onClick={handleEdit}>Edit Profile</button> */}
       </div>
