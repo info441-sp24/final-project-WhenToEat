@@ -3,6 +3,7 @@ import axios from 'axios';
 
 const Profile = () => {
   const [user, setUser] = useState(null);
+  const [userError, setUserError] = useState('')
   // const [isEditing, setIsEditing] = useState(false);
   // const [editedName, setEditedName] = useState("");
 
@@ -12,10 +13,12 @@ const Profile = () => {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const response = await axios.get(`/api/userInfo?username=${username}`);
-        if (response.data) {
+        const response = await axios.get(`http://localhost:8080/api/userInfo?username=${username}`);
+        if (response.data.status === "success") {
           setUser(response.data);
           // setEditedName(response.data.name);
+        } else {
+          setUserError('Please sign in first')
         }
       } catch (error) {
         console.error('Failed to fetch user', error);
@@ -48,19 +51,20 @@ const Profile = () => {
   //   }
   // };
 
-  if (!user) return <div>Please sign-in first</div>;
-
   return (
     <div>
-      <div>
-        <h1>{user.username}</h1>
-        <p>Points: {user.points}</p>
-        {/* <button onClick={handleEdit}>Edit Profile</button> */}
-      </div>
-      <div>
-        <h1>Restaurants Visited</h1>
-        
-      </div>
+      {user ? (
+        <div>
+          <h1>{user.username}</h1>
+          <p>Points: {user.points}</p>
+          {/* <button onClick={handleEdit}>Edit Profile</button> */}
+          <div>
+            <h1>Restaurants Visited</h1>
+          </div>
+        </div>
+      ) : (
+        <div><h1>Please sign-in first</h1></div>
+      )}
     </div>
   );
 };
