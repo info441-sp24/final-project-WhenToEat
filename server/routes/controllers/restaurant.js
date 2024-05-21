@@ -34,50 +34,6 @@ router.get("/explore", async (req, res) => {
     }
 });
 
-router.post("/add", async (req, res) => {
-    try {
-        // const { lobby_name, user_added, restaurant_id, restaurant } = req.body;
-        const { lobby_name, user_added, restaurant } = req.body;
-
-        // if (!lobby_name || !user_added || !restaurant_id || !restaurant) {
-        //     return res.status(400).json({ error: "All fields are required" });
-        // }
-
-        if (!lobby_name || !restaurant || !user_added) {
-            return res.status(400).json({ error: "All fields are required" });
-        }
-
-        const Lobby = req.models.Lobbies;
-
-        const lobby = await Lobby.findOne({ lobby_name });
-
-        if (!lobby) {
-            return res.status(404).json({ error: "Lobby not found" });
-        }
-
-        const newChoice = {
-            user_added,
-            // restaurant_id,
-            restaurant_id: "placeholder",
-            restaurant,
-            weight: 1 // Default weight
-        };
-
-        lobby.choices.push(newChoice);
-
-        await lobby.save();
-
-        return res.status(200).json({ message: "Restaurant added to the lobby successfully", lobby });
-    } catch (error) {
-        console.error("Error adding restaurant to the lobby:", error);
-        return res.status(500).json({ error: "An error occurred while adding the restaurant to the lobby" });
-    }
-});
-
-router.post("/random", async (req, res) => {
-    // Logic to get a random restaurant
-});
-
 export default router;
 
 
