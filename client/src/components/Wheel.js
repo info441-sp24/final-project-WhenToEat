@@ -27,9 +27,11 @@ const Wheel = () => {
         ws.onmessage = (event) => {
             const data = JSON.parse(event.data);
             if (data.action === 'nameUpdated') {
+                console.log(data.name, data.message)
                 setLobby(prevLobby => [...prevLobby, data.name]);
                 setNotifications(prev => [...prev, data.message]);
             } else if (data.action === 'nameDisconnected') {
+                console.log(data.name, data.message)
                 setLobby(prevLobby => prevLobby.filter(name => name !== data.name));
                 setNotifications(prev => [...prev, data.message]);
             } else if (data.action === 'lobbyClosed') {
@@ -105,7 +107,8 @@ const Wheel = () => {
 
     const spinWheel = async () => {
         let response = await axios.post('http://localhost:8080/api/lobbies/spinWheel', {
-            name: lastLobbyName
+            name: lastLobbyName,
+            notis: notifications// take out later
         });
         if (response.data.status === "not enough") {
             setSpinError("Need at least 2 participants!")
