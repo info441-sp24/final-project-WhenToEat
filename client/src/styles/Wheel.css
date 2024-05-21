@@ -18,13 +18,13 @@
     margin-bottom: 20px;
 }
 
-.create-lobby input, .join-lobby input, .join-wheel input {
+.create-lobby input, .join-lobby input, .join-wheel input, .restaurants input {
     padding: 10px;
     margin: 10px 0;
     width: 80%;
 }
 
-.create-lobby button, .join-lobby button, .join-wheel button {
+.create-lobby button, .join-lobby button, .join-wheel button, .restaurants button {
     padding: 10px 20px;
     margin-top: 10px;
 }

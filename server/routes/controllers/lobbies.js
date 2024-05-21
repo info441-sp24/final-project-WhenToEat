@@ -164,13 +164,13 @@ router.post("/addName", async (req, res) => {
 router.post("/addRestaurant", async (req, res) => {
     try {
         // const { lobby_name, user_added, restaurant_id, restaurant } = req.body;
-        const { lobby_name, user_added, restaurant } = req.body;
+        const { lobby_name, restaurant } = req.body;
 
         // if (!lobby_name || !user_added || !restaurant_id || !restaurant) {
         //     return res.status(400).json({ error: "All fields are required" });
         // }
 
-        if (!lobby_name || !restaurant || !user_added) {
+        if (!lobby_name || !restaurant) {
             return res.status(400).json({ error: "All fields are required" });
         }
 
@@ -183,7 +183,7 @@ router.post("/addRestaurant", async (req, res) => {
         }
 
         const newChoice = {
-            user_added,
+            // user_added,
             // restaurant_id,
             restaurant_id: "placeholder",
             restaurant,

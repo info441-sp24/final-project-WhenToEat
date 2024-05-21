@@ -19,6 +19,7 @@ const Wheel = () => {
     const [users, setUsers] = useState([]);
     const [restaurants, setRestaurants] = useState([]);
     const [noNameError, setNoNameError] = useState('');
+    const [noRestaurantError, setNoRestaurantError] = useState('');
     const [spinError, setSpinError] = useState('');
     const [existLobbyError, setExistLobbyError] = useState('');
     const [lastLobbyName, setLastLobbyName] = useState('');
@@ -91,6 +92,18 @@ const Wheel = () => {
             setJoinLobbyError('Lobby name does not exist');
         }
     };
+
+    const addRestaurant = async () => {
+        const restaurant = restaurantInputRef.current.value.trim();
+        if (restaurant.length < 1) {
+            setNoRestaurantError("Restaurant cannot be empty!");
+            return;
+        }
+        await axios.post('http://localhost:8080/api/lobbies/addRestaurant', {
+            lobby_name: lastLobbyName,
+            restaurant: restaurant
+        })
+    }
 
     const addName = async () => {
         const name = nameInputRef.current.value.trim();
