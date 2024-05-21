@@ -66,6 +66,7 @@ const Wheel = () => {
         let response = await axios.get(`http://localhost:8080/api/lobbies?lobbyName=${joinLobbyRef.current.value}`);
         if (response.data.status === "success") {
             setNotifications([])
+            console.log(response.data);
             setLobby(response.data.users);
             setShowSpinBtn(false);
             setJoinedLobby(true);

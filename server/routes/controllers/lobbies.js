@@ -139,6 +139,7 @@ router.post("/close", async (req, res) => {
 router.post("/addName", async (req, res) => {
     try {
         let lobbyNewUser = await req.models.Lobbies.findOne({ lobby_name: req.body.lobby_name });
+        console.log(lobbyNewUser);
         if (lobbyNewUser.users.length == 0) {
             lobbyNewUser.status = true
         }
