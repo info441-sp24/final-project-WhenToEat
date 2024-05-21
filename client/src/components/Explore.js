@@ -6,7 +6,7 @@ const Explore = () => {
     const [selectedCuisine, setSelectedCuisine] = useState("");
     const [uniqueCuisines, setUniqueCuisines] = useState([]);
     const [selectedPriceRange, setSelectedPriceRange] = useState([]);
-    const [selectedRating, setSelectedRating] = useState([]);
+    const [selectedRatings, setSelectedRatings] = useState([]);
 
     useEffect(() => {
         fetchRestaurants();
@@ -45,7 +45,7 @@ const Explore = () => {
     };
 
     const handleRatingChange = (rating) => {
-        setSelectedRating((prev) => {
+        setSelectedRatings((prev) => {
             return prev.includes(rating)
                 ? prev.filter((r) => r !== rating)
                 : [...prev, rating];
@@ -58,10 +58,10 @@ const Explore = () => {
                 searchQuery,
                 selectedCuisine,
                 selectedPriceRange: selectedPriceRange.join(','),
-                selectedRating: selectedRating.join(','),
+                selectedRatings: selectedRatings.join(','),
             });
 
-            const response = await fetch(`/api/search?${queryParams.toString()}`);
+            const response = await fetch(`/api/explore?${queryParams.toString()}`);
             if (!response.ok) {
                 throw new Error('Network response was not ok');
             }
@@ -74,12 +74,12 @@ const Explore = () => {
 
     useEffect(() => {
         applyFilters();
-    }, [selectedCuisine, selectedPriceRange, selectedRating, searchQuery]);
+    }, [selectedCuisine, selectedPriceRange, selectedRatings, searchQuery]);
 
     const handleClearFilters = () => {
         setSelectedCuisine("");
         setSelectedPriceRange([]);
-        setSelectedRating([]);
+        setSelectedRatings([]);
         setSearchQuery("");
         fetchRestaurants();
     };
@@ -130,7 +130,7 @@ const Explore = () => {
                                 <input
                                     type="checkbox"
                                     id={`rating-${rating}`}
-                                    checked={selectedRating.includes(rating)}
+                                    checked={selectedRatings.includes(rating)}
                                     onChange={() => handleRatingChange(rating)}
                                 />
                                 <label htmlFor={`rating-${rating}`}>{rating} Stars</label>
@@ -159,8 +159,8 @@ const Explore = () => {
                     )}
                 </div>
             </div>
-            </div>
-          );
-        }
+        </div>
+    );
+}
 
 export default Explore;
