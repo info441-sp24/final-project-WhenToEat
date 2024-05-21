@@ -108,13 +108,13 @@ router.post("/spinWheel", async (req, res) => {
         // get the winner
         const lobbyToSpin = await req.models.Lobbies.findOne({ lobby_name: req.body.name });
         console.log("users in lobby:", lobbyToSpin.users, "notification list:", req.body.notis);
-        let users = lobbyToSpin.users
-        if (users.length < 2) {
+        let choices = lobbyToSpin.choices
+        if (choices.length < 2) {
             res.json({"status" : "not enough"})
             return
         }
-        let randomNum = Math.floor(Math.random() * users.length)
-        res.json({"status": "success", "winner": users[randomNum] })
+        let randomNum = Math.floor(Math.random() * choices.length)
+        res.json({"status": "success", "winner": choices[randomNum]['restaurant'] })
     } catch (error) {
         console.log("Error:", error);
         res.status(500).json({"status": "error", "error": error});
@@ -157,13 +157,13 @@ router.post("/addName", async (req, res) => {
 router.post("/addRestaurant", async (req, res) => {
     try {
         // const { lobby_name, user_added, restaurant_id, restaurant } = req.body;
-        const { lobby_name, user_added, restaurant } = req.body;
+        const { lobby_name, restaurant } = req.body;
 
         // if (!lobby_name || !user_added || !restaurant_id || !restaurant) {
         //     return res.status(400).json({ error: "All fields are required" });
         // }
 
-        if (!lobby_name || !restaurant || !user_added) {
+        if (!lobby_name || !restaurant) {
             return res.status(400).json({ error: "All fields are required" });
         }
 
@@ -176,7 +176,7 @@ router.post("/addRestaurant", async (req, res) => {
         }
 
         const newChoice = {
-            user_added,
+            // user_added,
             // restaurant_id,
             restaurant_id: "placeholder",
             restaurant,

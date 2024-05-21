@@ -95,6 +95,10 @@ const Wheel = () => {
             setNoRestaurantError("Restaurant cannot be empty!");
             return;
         }
+        await axios.post('http://localhost:8080/api/lobbies/addRestaurant', {
+            lobby_name: lastLobbyName,
+            restaurant: restaurant
+        })
     }
 
     const addName = async () => {
@@ -233,7 +237,7 @@ const Wheel = () => {
                 </div>
             )}
             <div className={`popup ${showWinnerPopup ? 'show' : ''}`}>
-                <h2>The winner is {winner}'s restaurant!</h2>
+                <h2>The winner is the restaurant {winner}!</h2>
                 <button onClick={closeWinnerPopup}>Close</button>
             </div>
         </div>
