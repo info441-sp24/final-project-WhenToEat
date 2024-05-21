@@ -81,7 +81,7 @@ router.get("/", async (req, res) => {
         const existingLobby = await req.models.Lobbies.findOne({ lobby_name: lobbyName });
         if (existingLobby && existingLobby.status) {
             existingLobby.save()
-            return res.json({ "status": "success", "users": existingLobby.users })
+            return res.json({ "status": "success", "users": existingLobby.users, "choices": existingLobby.choices})
         } else if (existingLobby && !existingLobby.status) {
             return res.json({ "status": "closed" })
         } else {
