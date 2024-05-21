@@ -1,43 +1,44 @@
 import express from 'express';
-// import { searchRestaurants, getRestaurantDetails } from '../utils/yelpclient'
-const router = express.Router()
+import models from '../../models.js'; 
+const router = express.Router();
+router.get("/explore", async (req, res) => {
+    const { searchQuery, selectedCuisine, selectedPriceRange, selectedRating } = req.query;
+    try {
+        let query = {};
+        if (searchQuery) {
+            query.$or = [
+                { name: { $regex: new RegExp(searchQuery, 'i') } },
+                { address: { $regex: new RegExp(searchQuery, 'i') } }
+            ];
+        }
+        if (selectedCuisine) {
+            query.cuisine = selectedCuisine;
+        }
+        if (selectedPriceRange) {
+            query.price_range = { $in: selectedPriceRange.split(',') };
+        }
+        if (selectedRating) {
+            query.rating = { $in: selectedRating.split(',').map(Number) };
+        }
+        let restaurants;
 
-router.get("/", async (req, res) => {
-    res.send("YO");
-})
-
-// router.get("/explore", async (req, res) => {
-//     const { term, location } = req.query;
-
-//     if (!term || !location) {
-//         return res.status(400).json({ error: 'Term and location are required' });
-//     }
-
-//     try {
-//         const restaurants = await searchRestaurants(term, location);
-//         res.status(200).json(restaurants);
-//     } catch (error) {
-//         res.status(500).json({ error: 'Internal server error' });
-//     }
-// })
-
-// router.get("/search/:id", async (req, res) => {
-//     const { id } = req.params;
-
-//     try {
-//         const restaurantDetails = await getRestaurantDetails(id);
-//         res.status(200).json(restaurantDetails);
-//     } catch (error) {
-//         res.status(500).json({ error: 'Internal server error' });
-//     }
-// })
-
+        if (Object.keys(query).length === 0) {
+            restaurants = await models.Restaurants.find({});
+        } else {
+            restaurants = await models.Restaurants.find(query);
+        }
+        res.status(200).json(restaurants);
+    } catch (error) {
+        console.error('Error fetching or filtering restaurants:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
 router.post("/add", async (req, res) => {
-    res.send("YO");
-})
-
+    // Logic to add a new restaurant
+});
 router.post("/random", async (req, res) => {
-    res.send("YO");
-})
-
+    // Logic to get a random restaurant
+});
 export default router;
+
+

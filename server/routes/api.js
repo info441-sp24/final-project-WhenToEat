@@ -8,7 +8,7 @@ import lobbiesRouter from './controllers/lobbies.js';
 
 router.use('/users', usersRouter);
 router.use('/friends', friendsRouter);
-router.use('/restaurant', restaurantRouter);
+router.use('/explore', restaurantRouter);
 router.use('/lobbies', lobbiesRouter);
 
 export default router;
