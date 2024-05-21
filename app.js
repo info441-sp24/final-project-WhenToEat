@@ -46,7 +46,8 @@ app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
+
+app.use(express.static(path.join(__dirname, 'public/build')));
 
 app.use(sessions({
     secret: "this is some secret key I am making up p8kn fwlihftrn3oinyswnwd3in4oin",
