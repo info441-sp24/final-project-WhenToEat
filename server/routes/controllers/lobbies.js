@@ -4,37 +4,50 @@ import enableWs from 'express-ws';
 const router = express.Router()
 enableWs(router);
 
-let socketCounter = 1
+let socketCounter = 0
 let allSockets = {}
 
 router.ws("/wheelSocket", (ws, res) => {
-    let mySocketNum = socketCounter
-    socketCounter++
-    console.log("user " + mySocketNum + " connected via websocket")
-
-    allSockets[mySocketNum] = {
-        socket: ws,
-        name: mySocketNum
-    }
-
+    let mySocketNum;
+    let myLobbyId;
     ws.on('message', async msg => {
         try {
             const socketMsg = JSON.parse(msg);
-            if (socketMsg.action === 'updateName') {
-                console.log(socketMsg.name + ' has joined the lobby');
-                allSockets[mySocketNum].name = socketMsg.name;
-                broadcastNotification(`${socketMsg.name} has joined the lobby`, 'nameUpdated', `${socketMsg.name}`);
+            switch (socketMsg.action) {
+                case 'joinLobby':
+                    myLobbyId = socketMsg.lobbyId;
+                    if (!allSockets[myLobbyId]) {
+                        allSockets[myLobbyId] = {};
+                    }
+                    mySocketNum = socketCounter++;
+                    allSockets[myLobbyId][mySocketNum] = {
+                        socket: ws,
+                        name: undefined
+                    };
+                    console.log(`User ${mySocketNum} connected to lobby ${myLobbyId} via websocket`);
+                    break;
+                case 'updateName':
+                    if (myLobbyId && allSockets[myLobbyId][mySocketNum]) {
+                        allSockets[myLobbyId][mySocketNum].name = socketMsg.name;
+                        console.log(`User ${mySocketNum} in lobby ${myLobbyId} updated name to ${socketMsg.name}`);
+                        broadcastNotification(myLobbyId, `${socketMsg.name} has joined the lobby`, 'nameUpdated', socketMsg.name);
+                    }
+                    break;
             }
         } catch (error) {
             console.error('Websocket message received error: ' + error);
         }
     });
 
+
     ws.on('close', () => {
-        const disconnectedName = allSockets[mySocketNum].name;
-        console.log(disconnectedName + ' has disconnected :(');
-        delete allSockets[mySocketNum];
-        broadcastNotification(`${disconnectedName} has disconnected`, 'nameDisconnected', `${disconnectedName}`);
+        if (myLobbyId && mySocketNum && allSockets[myLobbyId] && allSockets[myLobbyId][mySocketNum]) {
+            console.log(`User ${mySocketNum} from lobby ${myLobbyId} has disconnected`);
+            delete allSockets[myLobbyId][mySocketNum];
+            if (Object.keys(allSockets[myLobbyId]).length === 0) {
+                delete allSockets[myLobbyId];
+            }
+        }
     });
 })
 
@@ -48,16 +61,17 @@ router.ws("/wheelSocket", (ws, res) => {
 //         throw error;
 //     }
 // }
-
-function broadcastNotification(message, action, name) {
+function broadcastNotification(lobbyId, message, action, name) {
     const notification = JSON.stringify({
         action: action,
         message: message,
         name: name
     });
-    
-    for (let socketNum in allSockets) {
-        allSockets[socketNum].socket.send(notification);
+
+    if (allSockets[lobbyId]) {
+        for (let socketNum in allSockets[lobbyId]) {
+            allSockets[lobbyId][socketNum].socket.send(notification);
+        }
     }
 }
 
@@ -83,24 +97,18 @@ router.post("/", async (req, res) => {
     const lobbyName = req.body.name.trim();
     const existingLobby = await req.models.Lobbies.findOne({ lobby_name: lobbyName });
     if (existingLobby) {
-        return res.json({ "status": "Lobby name already exists" })
+        return res.json({ "status": "Lobby name already exists" });
     } else {
-        try {
-            // console.log("BODY", req.body)
-            const newLobby = new req.models.Lobbies({
-                lobby_name: req.body.name,
-                users: [],
-                choices: [],
-                status: false
-            })
-            await newLobby.save()
-            res.json({"status": "success"})
-        } catch (error) {
-            console.log("Error:", error);
-            res.status(500).json({"status": "error", "error": error});
-        }
+        const newLobby = new req.models.Lobbies({
+            lobby_name: lobbyName,
+            users: [],
+            choices: [],
+            status: true 
+        });
+        await newLobby.save();
+        res.json({"status": "success", "lobbyId": newLobby._id});
     }
-})
+});
 
 router.post("/spinWheel", async (req, res) => {
     try {
@@ -128,7 +136,7 @@ router.post("/close", async (req, res) => {
             lobbyToClose.status = false
             await lobbyToClose.save()
         }
-        broadcastNotification(`Host (${allSockets[1].name}) has closed the lobby`, 'lobbyClosed', ``);
+        broadcastNotification(lobbyToClose._id, `Host has closed the lobby`, 'lobbyClosed', ``);
         res.json({"status": "success"})
     } catch (error) {
         console.log("Error:", error);

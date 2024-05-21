@@ -53,6 +53,10 @@ const Wheel = () => {
             setJoinedLobby(true);
             setShowCloseLobby(true);
             setShowSpinBtn(true);
+            ws.send(JSON.stringify({
+                action: 'joinLobby',
+                lobbyId: response.data.lobbyId
+            }));
         } else {
             setExistLobbyError('Lobby name already used');
         }
@@ -65,17 +69,20 @@ const Wheel = () => {
         }
         let response = await axios.get(`http://localhost:8080/api/lobbies?lobbyName=${joinLobbyRef.current.value}`);
         if (response.data.status === "success") {
-            setNotifications([])
-            console.log(response.data);
+            setNotifications([]);
             setLobby(response.data.users);
             setShowSpinBtn(false);
             setJoinedLobby(true);
+            setLastLobbyName(joinLobbyRef.current.value);
+            ws.send(JSON.stringify({
+                action: 'joinLobby',
+                lobbyId: response.data.lobbyId
+            }));
         } else if (response.data.status === "closed") {
             setJoinLobbyError('Lobby has not been opened yet or was already closed');
         } else {
             setJoinLobbyError('Lobby name does not exist');
         }
-        setLastLobbyName(joinLobbyRef.current.value);
     };
 
     const addName = async () => {
