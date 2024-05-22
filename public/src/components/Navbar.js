@@ -11,8 +11,7 @@ const Navbar = () => {
     useEffect(() => {
 		const fetchIdentityInfo = async () => {
 			try {
-				const response = await axios.get('http://localhost:8080/api/users/myIdentity');
-				console.log("API Response:", response.data);
+				const response = await axios.get('/api/users/myIdentity');
 				setIdentityInfo(response.data);
 			} catch (error) {
 				console.error("Error fetching identity info:", error);
@@ -44,11 +43,13 @@ const Navbar = () => {
 							Explore
 						</NavLink>
 					</li>
-					<li>
-						<NavLink to="/profile">
-							Profile
-						</NavLink>
-					</li>
+					{!loading && identityInfo && identityInfo.status === 'loggedin' && (
+						<li>
+								<NavLink to={`/profile?user=${identityInfo.userInfo.username}`}>
+										Profile
+								</NavLink>
+						</li>
+					)}
 				</ul>
 			</div>
 			<div className="authBtns">
@@ -56,9 +57,9 @@ const Navbar = () => {
 					<p>Loading...</p>
 				) : (
 					identityInfo && identityInfo.status === 'loggedin' ? (
-						<a href="http://localhost:3001/signout">Log out</a>
+						<a href="/signout">Log out</a>
 					) : (
-						<a href="http://localhost:3001/signin">Sign in</a>
+						<a href="/signin">Sign in</a>
 					)
 				)}
 			</div>

@@ -1,15 +1,18 @@
 import express from 'express';
 import enableWs from 'express-ws';
 
-const router = express.Router()
+const router = express();
 enableWs(router);
 
 let socketCounter = 0
-let allSockets = {}
+let allSockets = []
 
 router.ws("/wheelSocket", (ws, res) => {
     let mySocketNum;
     let myLobbyId;
+    
+    allSockets.push(ws);
+
     ws.on('message', async msg => {
         try {
             const socketMsg = JSON.parse(msg);
@@ -43,7 +46,6 @@ router.ws("/wheelSocket", (ws, res) => {
             console.error('Websocket message received error: ' + error);
         }
     });
-
 
     ws.on('close', () => {
         if (myLobbyId && mySocketNum && allSockets[myLobbyId] && allSockets[myLobbyId][mySocketNum]) {

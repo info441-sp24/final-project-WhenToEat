@@ -22,7 +22,7 @@ const Home = () => {
   
 // async function loadInfo() {
 //     try {
-//       const response = await axios.get("http://localhost:8080/api/friends");
+//       const response = await axios.get("/api/friends");
 //       document.getElementById("info").innerHTML = response.data;
 //     } catch (error) {
 //       console.error("Error fetching data:", error);
