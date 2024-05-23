@@ -5,6 +5,7 @@
  */
 var debug = require('debug')('express-starter:server');
 var http = require('http');
+var enableWs = require('express-ws');
 
 (async () => {
   const app = await (await import('../app.js')).default;
@@ -21,6 +22,7 @@ var http = require('http');
    */
 
   var server = http.createServer(app);
+  enableWs(app,server)
 
   /**
    * Listen on provided port, on all network interfaces.

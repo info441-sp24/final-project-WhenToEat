@@ -60,12 +60,6 @@ app.use((req, res, next) => {
     next()
 })
 
-app.listen(8080, () => {
-    console.log('server listening on port 8080')
-})
-
-// app.use('/*', createProxyMiddleware({target: 'http://localhost:4000'}))
-
 app.get('/signin', (req, res, next) => {
     return req.authContext.login({
         postLoginRedirectUri: "/", // redirect here after login
