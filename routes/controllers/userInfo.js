@@ -6,21 +6,32 @@ router.post("/", async (req, res, next) => {
         let info = req.body;
         try {
             let existingUser = await req.models.Users.findOne({ username: req.session.account.username });
-            if (existingUser) {
-                if (info.points) { 
-                    existingUser.points = info.points;
-                }
-                await existingUser.save();
-            } else {
+            if (!existingUser) {
                 let newUser = new req.models.Users({
                     username: req.session.account.username,
+                    name: info.name,
                     email: info.email,  
-                    points: info.points, 
-                    friends: info.friends || [],
+                    points: 25, 
+                    friends: [],
                     created_date: new Date()
                 });
                 await newUser.save();
             }
+            // if (existingUser) {
+            //     if (info.points) { 
+            //         existingUser.points = info.points;
+            //     }
+            //     await existingUser.save();
+            // } else {
+            //     let newUser = new req.models.Users({
+            //         username: req.session.account.username,
+            //         email: info.email,  
+            //         points: info.points, 
+            //         friends: info.friends || [],
+            //         created_date: new Date()
+            //     });
+            //     await newUser.save();
+            // }
             res.json({ "status": "success" });
         } catch (error) {
             console.log(error.message)
@@ -42,9 +53,8 @@ router.get("/", async (req, res) => {
                 res.status(400).json({ "status": "error", "error": "Username is required" });
             } else {
                 let user = await req.models.Users.findOne({ username: username });
-                console.log(user);
                 if (user) {
-                    res.json(user);
+                    res.status(200).json({"status": "success", "user": user});
                 } else {
                     res.status(404).json({ "status": "error", "error": "User not found" });
                 }

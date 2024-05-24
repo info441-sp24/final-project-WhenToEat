@@ -17,7 +17,8 @@ const Profile = () => {
         if (username != "null") {
           response = await axios.get(`/api/userInfo?username=${username}`);
           if (response.data.status === "success") {
-            setUser(response.data);
+            setUser(response.data.user);
+            console.log(user)
             // setEditedName(response.data.name);
           }
         } else {
@@ -66,7 +67,7 @@ const Profile = () => {
           </div>
         </div>
       ) : (
-        <div><h1>Please sign-in first</h1></div>
+        <div><h1>userError</h1></div>
       )}
     </div>
   );
