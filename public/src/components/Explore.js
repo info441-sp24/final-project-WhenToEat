@@ -92,7 +92,13 @@ const Explore = () => {
                 <h2>Search Restaurants</h2>
             </header>
             <div className="filter-search">
-                <div className="filter-form">
+                <div className="search-input">
+                    <h6 className="search-label">Search By Name</h6>
+                    <input type="text"
+                        value={searchQuery}
+                        onChange={handleSearchChange} />
+                </div>
+                <div className="filter-form">    
                     
                     <div className="cuisine-filter p-3">
                         <h6 className="filter-title">Filter by Cuisine</h6>

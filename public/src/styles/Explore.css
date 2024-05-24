@@ -17,3 +17,15 @@
 .main-header {
     margin-left: 1rem;
 }
+
+.search-input {
+    margin-left: 2rem;
+}
+
+.search-label {
+    margin-bottom: 1rem;
+}
+
+.search-results-container {
+    text-align: center;
+}
