@@ -38,10 +38,11 @@ router.get("/", async (req, res) => {
     if (req.session.isAuthenticated) {
         try {
             let username = req.query.username;
-            if (!username) {
+            if (username === "null") {
                 res.status(400).json({ "status": "error", "error": "Username is required" });
             } else {
                 let user = await req.models.Users.findOne({ username: username });
+                console.log(user);
                 if (user) {
                     res.json(user);
                 } else {

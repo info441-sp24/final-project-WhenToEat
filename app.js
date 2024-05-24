@@ -5,11 +5,8 @@ import logger from 'morgan';
 import cors from 'cors';
 import enableWs from 'express-ws';
 import sessions from 'express-session';
-
-import httpProxyMiddleware from 'http-proxy-middleware'
-const createProxyMiddleware = httpProxyMiddleware.createProxyMiddleware;
-
 import WebAppAuthProvider from 'msal-node-wrapper'
+// import httpProxyMiddleware from 'http-proxy-middleware'
 
 const authConfig = {
     auth: {
@@ -63,14 +60,6 @@ app.use((req, res, next) => {
     next()
 })
 
-app.use('/api', apiRouter);
-
-app.listen(8080, () => {
-    console.log('server listening on port 8080')
-})
-
-app.use('/*', createProxyMiddleware({target: 'http://localhost:4000'}))
-
 app.get('/signin', (req, res, next) => {
     return req.authContext.login({
         postLoginRedirectUri: "/", // redirect here after login
@@ -83,6 +72,8 @@ app.get('/signout', (req, res, next) => {
     })(req, res, next);
 
 });
+
+app.use('/api', apiRouter);
 app.use(authProvider.interactionErrorHandler());
 
 export default app;

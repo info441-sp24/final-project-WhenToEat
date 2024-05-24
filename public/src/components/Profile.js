@@ -7,16 +7,19 @@ const Profile = () => {
   // const [isEditing, setIsEditing] = useState(false);
   // const [editedName, setEditedName] = useState("");
 
-  const urlParams = new URLSearchParams(window.location.search);
-  const username = urlParams.get('user');
-
   useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.hash.split('?')[1]);
+    const username = urlParams.get('user');
+
     const fetchUser = async () => {
       try {
-        const response = await axios.get(`http://localhost:8080/api/userInfo?username=${username}`);
-        if (response.data.status === "success") {
-          setUser(response.data);
-          // setEditedName(response.data.name);
+        let response;
+        if (username != "null") {
+          response = await axios.get(`/api/userInfo?username=${username}`);
+          if (response.data.status === "success") {
+            setUser(response.data);
+            // setEditedName(response.data.name);
+          }
         } else {
           setUserError('Please sign in first')
         }
@@ -26,7 +29,7 @@ const Profile = () => {
     };
 
     fetchUser();
-  }, [username]);
+  }, []);
 
   // const handleNameChange = (event) => {
   //   setEditedName(event.target.value);

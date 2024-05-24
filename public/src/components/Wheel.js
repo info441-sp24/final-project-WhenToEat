@@ -2,7 +2,10 @@ import React, { useRef, useState, useEffect } from 'react';
 import '../styles/Wheel.css';
 import axios from 'axios';
 
-const socketUrl = "ws://localhost:8080/api/lobbies/wheelSocket";
+const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+const hostname = window.location.hostname;
+const port = window.location.port ? `:${window.location.port}` : "";
+const socketUrl = `${protocol}//${hostname}${port}/api/lobbies/wheelSocket`;
 let ws = new WebSocket(socketUrl);
 
 const Wheel = () => {
@@ -50,7 +53,7 @@ const Wheel = () => {
             setExistLobbyError('Must enter lobby name');
             return;
         }
-        let response = await axios.post('http://localhost:8080/api/lobbies', {
+        let response = await axios.post('/api/lobbies', {
             name: lobbyNameRef.current.value
         });
         if (response.data.status === "success") {
@@ -73,7 +76,7 @@ const Wheel = () => {
             setJoinLobbyError('Must enter lobby name');
             return;
         }
-        let response = await axios.get(`http://localhost:8080/api/lobbies?lobbyName=${joinLobbyRef.current.value}`);
+        let response = await axios.get(`/api/lobbies?lobbyName=${joinLobbyRef.current.value}`);
         if (response.data.status === "success") {
             setNotifications([]);
             setUsers(response.data.users);
@@ -99,7 +102,7 @@ const Wheel = () => {
             setNoRestaurantError("Restaurant cannot be empty!");
             return;
         }
-        await axios.post('http://localhost:8080/api/lobbies/addRestaurant', {
+        await axios.post('/api/lobbies/addRestaurant', {
             lobby_name: lastLobbyName,
             restaurant: restaurant
         })
@@ -117,7 +120,7 @@ const Wheel = () => {
             name: name,
             restaurant: restaurant
         }));
-        await axios.post('http://localhost:8080/api/lobbies/addName', {
+        await axios.post('/api/lobbies/addName', {
             lobby_name: lastLobbyName,
             name: name,
             restaurant: restaurant
@@ -126,7 +129,7 @@ const Wheel = () => {
     };
 
     const spinWheel = async () => {
-        let response = await axios.post('http://localhost:8080/api/lobbies/spinWheel', {
+        let response = await axios.post('/api/lobbies/spinWheel', {
             name: lastLobbyName
         });
         if (response.data.status === "not enough") {
