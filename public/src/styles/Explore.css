@@ -1,0 +1,19 @@
+.search {
+    padding-top: 1rem;
+}
+
+.filter-form {
+    display: flex;
+    flex-direction: row;
+    width: 90vw;
+    margin: auto;
+    justify-content: space-between;
+}
+
+.clear-filters-btn {
+    margin: 1rem;
+}
+
+.main-header {
+    margin-left: 1rem;
+}

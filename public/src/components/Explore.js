@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import RestaurantCard from './RestaurantCard';
+import '../styles/Explore.css'
 
 const Explore = () => {
     const [searchQuery, setSearchQuery] = useState("");
@@ -85,15 +87,13 @@ const Explore = () => {
     };
 
     return (
-        <div className="search" style={{ paddingTop: "20px" }}>
+        <div className="search">
             <header className="main-header">
                 <h2>Search Restaurants</h2>
             </header>
             <div className="filter-search">
                 <div className="filter-form">
-                    <button className="clear-filters-btn" onClick={handleClearFilters}>
-                        Clear Filters
-                    </button>
+                    
                     <div className="cuisine-filter p-3">
                         <h6 className="filter-title">Filter by Cuisine</h6>
                         <select
@@ -138,18 +138,15 @@ const Explore = () => {
                         ))}
                     </div>
                 </div>
+                <button className="clear-filters-btn" onClick={handleClearFilters}>
+                    Clear Filters
+                </button>
             </div>
             <div className="search-results-container">
-                <div className="matched-restaurants">
+            <div className="matched-restaurants">
                     {filteredRestaurants.length > 0 ? (
                         filteredRestaurants.map((restaurant) => (
-                            <div key={restaurant.yelp_google_id} className="restaurant">
-                                <h3>{restaurant.name}</h3>
-                                <p>{restaurant.address}</p>
-                                <p>{restaurant.cuisine}</p>
-                                <p>{restaurant.price_range}</p>
-                                <p>{restaurant.rating} Stars</p>
-                            </div>
+                            <RestaurantCard key={restaurant.yelp_google_id} restaurant={restaurant} />
                         ))
                     ) : (
                         <div className="no-results-message">
