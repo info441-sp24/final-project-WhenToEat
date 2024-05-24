@@ -1,0 +1,4 @@
+{
+    "appService.defaultWebAppToDeploy": "undefined/subscriptions/9c0ff833-5cb1-4c50-9145-74bf2ee523b3/resourceGroups/appsvc_linux_centralus5/providers/Microsoft.Web/sites/whenToEat-kaydoan",
+    "appService.deploySubpath": "."
+}
