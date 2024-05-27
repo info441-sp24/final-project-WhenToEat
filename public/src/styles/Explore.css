@@ -1,0 +1,31 @@
+.search {
+    padding-top: 1rem;
+}
+
+.filter-form {
+    display: flex;
+    flex-direction: row;
+    width: 90vw;
+    margin: auto;
+    justify-content: space-between;
+}
+
+.clear-filters-btn {
+    margin: 1rem;
+}
+
+.main-header {
+    margin-left: 1rem;
+}
+
+.search-input {
+    margin-left: 2rem;
+}
+
+.search-label {
+    margin-bottom: 1rem;
+}
+
+.search-results-container {
+    text-align: center;
+}

@@ -12,6 +12,12 @@ const Navbar = () => {
 		const fetchIdentityInfo = async () => {
 			try {
 				const response = await axios.get('/api/users/myIdentity');
+				if (response.data.status === "loggedin") {
+					await axios.post('/api/userInfo', {
+						email: response.data.userInfo.username,
+						name: response.data.userInfo.name
+					});
+				}
 				setIdentityInfo(response.data);
 			} catch (error) {
 				console.error("Error fetching identity info:", error);

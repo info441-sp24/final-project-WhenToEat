@@ -16,7 +16,8 @@ const Profile = () => {
         if (username !== null) {
           let response = await axios.get(`/api/userInfo?username=${username.current.value}`);
           if (response.data.status === "success") {
-            setUser(response.data);
+            setUser(response.data.user);
+            console.log(user)
             // setEditedName(response.data.name);
           } else {
             setUserError('Failed to fetch user data');
@@ -72,7 +73,7 @@ const Profile = () => {
           </div>
         </div>
       ) : (
-        <div><h1>Please sign-in first</h1></div>
+        <div><h1>userError</h1></div>
       )}
     </div>
   );

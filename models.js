@@ -54,15 +54,6 @@ models.UserHistory = mongoose.model('User History', user_historySchema);
 
 console.log("mongoose model User History created");
 
-const friendshipSchema = new mongoose.Schema({
-  user_one_id: String,
-  user_two_id: String,
-  status: String,
-  created_at: Date
-});
-
-models.Friendship = mongoose.model('Friendship', friendshipSchema);
-
 const wheels_entriesSchema = new mongoose.Schema({
   user_added: String,
   restaurant_id: String,

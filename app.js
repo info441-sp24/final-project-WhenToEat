@@ -64,13 +64,12 @@ app.get('/signin', (req, res, next) => {
     return req.authContext.login({
         postLoginRedirectUri: "/", // redirect here after login
     })(req, res, next);
-
 });
+
 app.get('/signout', (req, res, next) => {
     return req.authContext.logout({
         postLogoutRedirectUri: "/", // redirect here after logout
     })(req, res, next);
-
 });
 
 app.use('/api', apiRouter);
