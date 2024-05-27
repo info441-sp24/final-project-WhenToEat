@@ -7,12 +7,12 @@ router.post("/", async (req, res, next) => {
         try {
             let existingUser = await req.models.Users.findOne({ username: req.session.account.username });
             if (existingUser) {
-                if (info.points) { 
+                if (info.points !== undefined) { 
                     existingUser.points = info.points;
                 }
                 await existingUser.save();
             } else {
-                let newUser = new req.models.Users({
+                const newUser = new req.models.Users({
                     username: req.session.account.username,
                     email: info.email,  
                     points: info.points, 
@@ -20,8 +20,9 @@ router.post("/", async (req, res, next) => {
                     created_date: new Date()
                 });
                 await newUser.save();
+                res.json({ "status": "success" });
             }
-            res.json({ "status": "success" });
+            // res.json({ "status": "success" });
         } catch (error) {
             console.log(error.message)
             res.status(500).json({ "status": "error", "error": error.message });

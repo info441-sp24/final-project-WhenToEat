@@ -13,18 +13,24 @@ const Profile = () => {
 
     const fetchUser = async () => {
       try {
-        let response;
-        if (username != "null") {
-          response = await axios.get(`/api/userInfo?username=${username}`);
+        if (username !== null) {
+          let response = await axios.get(`/api/userInfo?username=${username.current.value}`);
           if (response.data.status === "success") {
             setUser(response.data);
             // setEditedName(response.data.name);
+          } else {
+            setUserError('Failed to fetch user data');
           }
         } else {
-          setUserError('Please sign in first')
+          setUserError('Please sign in first');
         }
       } catch (error) {
         console.error('Failed to fetch user', error);
+        if (error.response && error.response.status === 404) {
+          setUserError('User not found');
+        } else {
+          setUserError('An error occurred while fetching user data');
+        }
       }
     };
 
