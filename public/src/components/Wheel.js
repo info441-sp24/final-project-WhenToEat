@@ -20,6 +20,7 @@ const Wheel = () => {
     const [showCloseLobby, setShowCloseLobby] = useState(false);
     const [showSpinBtn, setShowSpinBtn] = useState(true);
     const [users, setUsers] = useState([]);
+    const [points, setPoints] = useState({});
     const [restaurants, setRestaurants] = useState([]);
     const [noNameError, setNoNameError] = useState('');
     const [noRestaurantError, setNoRestaurantError] = useState('');
@@ -36,10 +37,16 @@ const Wheel = () => {
                 setRestaurants(prevRestaurants => [...prevRestaurants, data.choice])
                 setUsers(prevLobby => [...prevLobby, data.name]);
                 setNotifications(prev => [...prev, data.message]);
+                setPoints({...points, [data.choice]: (points[data.choice] + 1 || 1) });
                 console.log(restaurants, users, notifications)
             } else if (data.action === 'nameDisconnected') {
                 setRestaurants(prevRestaurants => prevRestaurants.filter(name => name !== data.choice))
                 setUsers(prevLobby => prevLobby.filter(name => name !== data.name));
+                setPoints(prevPoints => {
+                    const newPoints = { ...prevPoints };
+                    delete newPoints[data.choice];
+                    return newPoints;
+                });
                 setNotifications(prev => [...prev, data.message]);
                 console.log(restaurants, users, notifications)
                 try {
@@ -107,6 +114,7 @@ const Wheel = () => {
                 setShowSpinBtn(false);
                 setJoinedLobby(true);
                 setLastLobbyName(joinLobbyRef.current.value);
+                setPoints(response.data.weights)
                 ws.send(JSON.stringify({
                     action: 'joinLobby',
                     lobbyId: response.data.lobbyId
@@ -202,9 +210,29 @@ const Wheel = () => {
         setWinner("");
     };
 
+    const increasePoints = async (restaurant) => {
+        console.log("Inc")
+        const currentPoints = (points[restaurant] || 0) + 1;
+        setPoints({ ...points, [restaurant]: currentPoints });
+        let response = await axios.post('/api/lobbies/increase', {
+            name: lastLobbyName,
+            restaurant: restaurant
+        });
+    };
+
+    const decreasePoints = async (restaurant) => {
+        console.log("Dec")
+        const currentPoints = Math.max((points[restaurant] || 0) - 1, 0);
+        setPoints({ ...points, [restaurant]: currentPoints });
+        let response = await axios.post('/api/lobbies/decrease', {
+            name: lastLobbyName,
+            restaurant: restaurant
+        });
+    };
+
     return (
         <div className="container">
-            {showWinnerPopup && <div className="overlay" />}
+            {showWinnerPopup && <div class="overlay" />}
             {joinedLobby && (
                 <h1>Let's Choose a Restaurant!</h1>
             )}
@@ -227,9 +255,9 @@ const Wheel = () => {
             {joinedLobby && (
                 <div className="lobby">
                     <div className="lobby-name-display">
-                        <div>Lobby Name: <span style={{fontStyle: 'italic', fontWeight: 'bold' }}>{lastLobbyName}</span></div>
-                        { showCloseLobby &&  (
-                            <button onClick={closeLobby} className="close-lobby">Close Lobby</button>
+                        <div>Lobby Name: <span style={{ fontStyle: 'italic', fontWeight: 'bold' }}>{lastLobbyName}</span></div>
+                        {showCloseLobby && (
+                            <button onClick={closeLobby} class="close-lobby">Close Lobby</button>
                         )}
                     </div>
                     {!joinedWheel && (
@@ -252,11 +280,16 @@ const Wheel = () => {
                     <div className="lobby-names">
                         {users.map((name, index) => (
                             <div key={index} className="lobby-name">
-                                {name}'s Restaurant : <span style={{ textDecoration: 'underline' }}>{restaurants[index] ? restaurants[index] : 'No choice selected'}</span>
+                                <div>{name}'s Restaurant : <span style={{ textDecoration: 'underline' }}>{restaurants[index] ? restaurants[index] : 'No choice selected'}</span></div>
+                                <div className="points-controls">
+                                    <button onClick={() => increasePoints(restaurants[index])}>∧</button>
+                                    <span>{points[restaurants[index]] || 0}</span>
+                                    <button onClick={() => decreasePoints(restaurants[index])}>∨</button>
+                                </div>
                             </div>
                         ))}
                     </div><br />
-                    { showSpinBtn && (
+                    {showSpinBtn && (
                         <button onClick={spinWheel} className='spin-wheel'>Spin The Wheel!</button>
                     )}
                     <p className='wheel-error'>{spinError}</p>
