@@ -20,6 +20,7 @@ const Wheel = () => {
     const [showCloseLobby, setShowCloseLobby] = useState(false);
     const [showSpinBtn, setShowSpinBtn] = useState(true);
     const [users, setUsers] = useState([]);
+    const [points, setPoints] = useState({});
     const [restaurants, setRestaurants] = useState([]);
     const [noNameError, setNoNameError] = useState('');
     const [noRestaurantError, setNoRestaurantError] = useState('');
@@ -30,44 +31,72 @@ const Wheel = () => {
     const [winner, setWinner] = useState("");
 
     useEffect(() => {
-        ws.onmessage = (event) => {
+        const handleWebSocketMessage = async (event) => {
             const data = JSON.parse(event.data);
             if (data.action === 'nameUpdated') {
                 setRestaurants(prevRestaurants => [...prevRestaurants, data.choice])
                 setUsers(prevLobby => [...prevLobby, data.name]);
                 setNotifications(prev => [...prev, data.message]);
+                setPoints({...points, [data.choice]: (points[data.choice] + 1 || 1) });
+                console.log(restaurants, users, notifications)
             } else if (data.action === 'nameDisconnected') {
-                console.log(data.name, data.message)
                 setRestaurants(prevRestaurants => prevRestaurants.filter(name => name !== data.choice))
                 setUsers(prevLobby => prevLobby.filter(name => name !== data.name));
+                setPoints(prevPoints => {
+                    const newPoints = { ...prevPoints };
+                    delete newPoints[data.choice];
+                    return newPoints;
+                });
                 setNotifications(prev => [...prev, data.message]);
+                console.log(restaurants, users, notifications)
+                try {
+                    const response = await axios.delete(`/api/lobbies/removeUser`, {
+                        data: {
+                            lobbyName: lastLobbyName,
+                            username: data.name
+                        }
+                    });
+                    console.log('User removed from lobby:', response.data);
+                } catch (error) {
+                    console.error('Error removing user from lobby:', error);
+                }
             } else if (data.action === 'lobbyClosed') {
                 setNotifications(prev => [...prev, data.message]);
                 setShowSpinBtn(false);
             }
         };
-    }, []);
+
+        ws.onmessage = handleWebSocketMessage;
+
+        return () => {
+            ws.onmessage = null;
+        };
+    }, [lastLobbyName]);
 
     const createLobby = async () => {
         if (lobbyNameRef.current.value.trim().length === 0) {
             setExistLobbyError('Must enter lobby name');
             return;
         }
-        let response = await axios.post('/api/lobbies', {
-            name: lobbyNameRef.current.value
-        });
-        if (response.data.status === "success") {
-            setNotifications([])
-            setLastLobbyName(lobbyNameRef.current.value.trim());
-            setJoinedLobby(true);
-            setShowCloseLobby(true);
-            setShowSpinBtn(true);
-            ws.send(JSON.stringify({
-                action: 'joinLobby',
-                lobbyId: response.data.lobbyId
-            }));
-        } else {
-            setExistLobbyError('Lobby name already used');
+        try {
+            let response = await axios.post('/api/lobbies', {
+                name: lobbyNameRef.current.value
+            });
+            if (response.data.status === "success") {
+                setNotifications([])
+                setLastLobbyName(lobbyNameRef.current.value.trim());
+                setJoinedLobby(true);
+                setShowCloseLobby(true);
+                setShowSpinBtn(true);
+                ws.send(JSON.stringify({
+                    action: 'joinLobby',
+                    lobbyId: response.data.lobbyId
+                }));
+            } else {
+                setExistLobbyError('Lobby name already used');
+            }
+        } catch (error) {
+            console.error('Error creating lobby:', error);
         }
     }
 
@@ -76,23 +105,27 @@ const Wheel = () => {
             setJoinLobbyError('Must enter lobby name');
             return;
         }
-        let response = await axios.get(`/api/lobbies?lobbyName=${joinLobbyRef.current.value}`);
-        if (response.data.status === "success") {
-            setNotifications([]);
-            setUsers(response.data.users);
-            setRestaurants(response.data.choices);
-            console.log(users)
-            setShowSpinBtn(false);
-            setJoinedLobby(true);
-            setLastLobbyName(joinLobbyRef.current.value);
-            ws.send(JSON.stringify({
-                action: 'joinLobby',
-                lobbyId: response.data.lobbyId
-            }));
-        } else if (response.data.status === "closed") {
-            setJoinLobbyError('Lobby has not been opened yet or was already closed');
-        } else {
-            setJoinLobbyError('Lobby name does not exist');
+        
+        try {
+            let response = await axios.get(`/api/lobbies?lobbyName=${joinLobbyRef.current.value}`);
+            if (response.data.status === "success") {
+                setUsers(response.data.users);
+                setRestaurants(response.data.choices);
+                setShowSpinBtn(false);
+                setJoinedLobby(true);
+                setLastLobbyName(joinLobbyRef.current.value);
+                setPoints(response.data.weights)
+                ws.send(JSON.stringify({
+                    action: 'joinLobby',
+                    lobbyId: response.data.lobbyId
+                }));
+            } else if (response.data.status === "closed") {
+                setJoinLobbyError('Lobby has not been opened yet or was already closed');
+            } else {
+                setJoinLobbyError('Lobby name does not exist');
+            }
+        } catch (error) {
+            console.error('Error joining lobby:', error);
         }
     };
 
@@ -146,12 +179,11 @@ const Wheel = () => {
     };
 
     const closeLobby = async () => {
-        let response = await axios.post('http://localhost:8080/api/lobbies/close', {
+        let response = await axios.post('/api/lobbies/close', {
             name: lastLobbyName
         });
 
         if (response.data.status === "success") {
-            console.log("CLOSE WORKED")
             ws.send(JSON.stringify({
                 action: 'lobbyClosed',
                 lobbyName: lastLobbyName
@@ -162,7 +194,7 @@ const Wheel = () => {
         }
     };
 
-    const handleLobbyClosed = () => {;
+    const handleLobbyClosed = () => {
         setNotifications([])
         setUsers([])
         setJoinedLobby(false);
@@ -178,9 +210,29 @@ const Wheel = () => {
         setWinner("");
     };
 
+    const increasePoints = async (restaurant) => {
+        console.log("Inc")
+        const currentPoints = (points[restaurant] || 0) + 1;
+        setPoints({ ...points, [restaurant]: currentPoints });
+        let response = await axios.post('/api/lobbies/increase', {
+            name: lastLobbyName,
+            restaurant: restaurant
+        });
+    };
+
+    const decreasePoints = async (restaurant) => {
+        console.log("Dec")
+        const currentPoints = Math.max((points[restaurant] || 0) - 1, 0);
+        setPoints({ ...points, [restaurant]: currentPoints });
+        let response = await axios.post('/api/lobbies/decrease', {
+            name: lastLobbyName,
+            restaurant: restaurant
+        });
+    };
+
     return (
         <div className="container">
-            {showWinnerPopup && <div className="overlay" />}
+            {showWinnerPopup && <div class="overlay" />}
             {joinedLobby && (
                 <h1>Let's Choose a Restaurant!</h1>
             )}
@@ -203,9 +255,9 @@ const Wheel = () => {
             {joinedLobby && (
                 <div className="lobby">
                     <div className="lobby-name-display">
-                        <div>Lobby Name: <span style={{fontStyle: 'italic', fontWeight: 'bold' }}>{lastLobbyName}</span></div>
-                        { showCloseLobby &&  (
-                            <button onClick={closeLobby} className="close-lobby">Close Lobby</button>
+                        <div>Lobby Name: <span style={{ fontStyle: 'italic', fontWeight: 'bold' }}>{lastLobbyName}</span></div>
+                        {showCloseLobby && (
+                            <button onClick={closeLobby} class="close-lobby">Close Lobby</button>
                         )}
                     </div>
                     {!joinedWheel && (
@@ -228,11 +280,16 @@ const Wheel = () => {
                     <div className="lobby-names">
                         {users.map((name, index) => (
                             <div key={index} className="lobby-name">
-                                {name}'s Restaurant : <span style={{ textDecoration: 'underline' }}>{restaurants[index] || 'No choice selected'}</span>
+                                <div>{name}'s Restaurant : <span style={{ textDecoration: 'underline' }}>{restaurants[index] ? restaurants[index] : 'No choice selected'}</span></div>
+                                <div className="points-controls">
+                                    <button onClick={() => increasePoints(restaurants[index])}>∧</button>
+                                    <span>{points[restaurants[index]] || 0}</span>
+                                    <button onClick={() => decreasePoints(restaurants[index])}>∨</button>
+                                </div>
                             </div>
                         ))}
                     </div><br />
-                    { showSpinBtn && (
+                    {showSpinBtn && (
                         <button onClick={spinWheel} className='spin-wheel'>Spin The Wheel!</button>
                     )}
                     <p className='wheel-error'>{spinError}</p>

@@ -16,6 +16,7 @@ router.post("/", async (req, res, next) => {
                     created_date: new Date()
                 });
                 await newUser.save();
+                res.json({ "status": "success" });
             }
             // if (existingUser) {
             //     if (info.points) { 

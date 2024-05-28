@@ -1,8 +1,3 @@
-.lobby {
-    font-weight: bold;
-    padding: 0 5px;
-}
-
 .container {
     margin: 0 auto;
     padding: 20px;
@@ -18,19 +13,15 @@
     margin-bottom: 20px;
 }
 
-.create-lobby input, .join-lobby input, .join-wheel input, .restaurants input {
+.create-lobby input, .join-lobby input, .join-wheel input {
     padding: 10px;
     margin: 10px 0;
     width: 80%;
 }
 
-.create-lobby button, .join-lobby button, .join-wheel button, .restaurants button {
+.create-lobby button, .join-lobby button, .join-wheel button, .spin-wheel {
     padding: 10px 20px;
     margin-top: 10px;
-}
-
-.spin-wheel {
-    padding: 10px 20px;
 }
 
 .wheel-error {
@@ -73,10 +64,30 @@
 }
 
 .lobby-name {
-    padding: 5px;
-    margin: 5px 0;
-    border: 1px solid #ccc;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    border: 1px solid #ddd;
+    margin-bottom: 10px;
     border-radius: 4px;
+}
+
+.points-controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.points-controls button {
+    width: 24px;
+    height: 24px;
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 18px;
+    font-weight: bold;
+    color: #0079d3;
 }
 
 .popup {
@@ -102,11 +113,6 @@
     margin-bottom: 2rem;
     color: #333333;
     padding-bottom: 1rem;
-}
-
-.popup p {
-    margin-bottom: 20px;
-    color: #666666;
 }
 
 .popup button {
