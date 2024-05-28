@@ -18,7 +18,7 @@ const Profile = () => {
     const fetchUser = async () => {
       try {
         if (username !== null) {
-          let response = await axios.get(`/api/userInfo?username=${username.current.value}`);
+          let response = await axios.get(`/api/userInfo?username=${username}`);
           if (response.data.status === "success") {
             setUser(response.data.user);
             console.log(response.data)

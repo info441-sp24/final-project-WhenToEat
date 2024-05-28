@@ -6,6 +6,8 @@ import cors from 'cors';
 import enableWs from 'express-ws';
 import sessions from 'express-session';
 import WebAppAuthProvider from 'msal-node-wrapper'
+import cron from 'node-cron'
+import axios from 'axios'
 // import httpProxyMiddleware from 'http-proxy-middleware'
 
 const authConfig = {
@@ -74,5 +76,22 @@ app.get('/signout', (req, res, next) => {
 
 app.use('/api', apiRouter);
 app.use(authProvider.interactionErrorHandler());
+
+cron.schedule('0 0 * * *', async () => {
+    try {
+      const usersResponse = await axios.get('/api/users');
+      const users = usersResponse.data;
+  
+      for (const user of users) {
+        await axios.post('/api/users/addPoints', {
+          userId: user.id,
+          points: 10,
+        });
+      }
+      console.log('Points added to all users');
+    } catch (error) {
+      console.error('Error adding points to users:', error);
+    }
+  });
 
 export default app;
