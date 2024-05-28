@@ -1,4 +1,4 @@
 *node_modules/
 *.vs/
 *.DS_Store
-./public/build
+/public/build
