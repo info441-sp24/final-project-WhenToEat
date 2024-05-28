@@ -81,7 +81,8 @@ router.get("/", async (req, res) => {
         if (existingLobby && existingLobby.status) {
             existingLobby.save()
             const restaurantNames = existingLobby.choices.map(choice => choice.restaurant);
-            return res.json({ "status": "success", "users": existingLobby.users, "lobbyId": existingLobby._id, "choices": restaurantNames})
+            const points = existingLobby.choices.map(choice => choice.weight);
+            return res.json({ "status": "success", "users": existingLobby.users, "lobbyId": existingLobby._id, "choices": restaurantNames, "weights": points})
         } else if (existingLobby && !existingLobby.status) {
             return res.json({ "status": "closed" })
         } else {
@@ -162,6 +163,15 @@ router.post("/addName", async (req, res) => {
         console.log("Error:", error);
         res.status(500).json({"status": "error", "error": error});
     }
+})
+
+router.post("/increase", async (req, res) => {
+    res.send("increase")
+
+})
+
+router.post("/decrease", async (req, res) => {
+    res.send("decrease")
 })
 
 router.delete("/removeUser", async (req, res) => {
