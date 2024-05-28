@@ -157,3 +157,7 @@
 .close-lobby:hover {
     background-color: #d32f2f;
 }
+
+.container {
+    margin-left: 30px;
+}
