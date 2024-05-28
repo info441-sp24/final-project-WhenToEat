@@ -17,6 +17,7 @@
     "mongoose": "^8.3.5",
     "morgan": "~1.9.1",
     "msal-node-wrapper": "https://gitpkg.now.sh/kylethayer/ms-identity-javascript-nodejs-tutorial-msal-node-v2-/Common/msal-node-wrapper?main",
-    "node-cron": "^3.0.3"
+    "node-cron": "^3.0.3",
+    "node-fetch": "^3.3.2"
   }
 }
