@@ -82,7 +82,10 @@ router.get("/", async (req, res) => {
             existingLobby.save()
             const restaurantNames = existingLobby.choices.map(choice => choice.restaurant);
             const points = existingLobby.choices.map(choice => choice.weight);
-            return res.json({ "status": "success", "users": existingLobby.users, "lobbyId": existingLobby._id, "choices": restaurantNames, "weights": points})
+            console.log(req.session.isAuthenticated)
+            const sessionName = req.session.isAuthenticated ? req.session.account.name : "";
+            return res.json({ "status": "success", "users": existingLobby.users, "lobbyId": existingLobby._id, "choices": restaurantNames, 
+                "weights": points, "sessionName": sessionName})
         } else if (existingLobby && !existingLobby.status) {
             return res.json({ "status": "closed" })
         } else {
@@ -122,6 +125,7 @@ router.post("/spinWheel", async (req, res) => {
             return
         }
         let randomNum = Math.floor(Math.random() * choices.length)
+        broadcastNotification(lobbyToSpin._id, `The winner is ${choices[randomNum].restaurant} (${choices[randomNum].user_added})!!!`, 'winnerDecided', "", "");
         res.json({"status": "success", "winner": choices[randomNum].restaurant })
     } catch (error) {
         console.log("Error:", error);
@@ -188,7 +192,6 @@ router.delete("/removeUser", async (req, res) => {
             res.status(200).json({ message: 'User removed from lobby successfully' });
         } catch (err) {
             if (err instanceof mongoose.Error.VersionError) {
-                // Retry the operation
                 lobby = await Lobbies.findOne({ lobby_name: lobbyName });
                 lobby.users = lobby.users.filter(user => user !== username);
                 lobby.choices = lobby.choices.filter(choice => choice.user_added !== username);

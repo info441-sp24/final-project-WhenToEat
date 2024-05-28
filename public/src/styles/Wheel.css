@@ -1,4 +1,4 @@
-.container {
+.wheel-container {
     margin: 0 auto;
     padding: 20px;
     max-width: 600px;
@@ -40,13 +40,14 @@
     font-weight: 500;
 }
 
-.notifications {
+.lobby-notifications {
     margin-top: 20px;
 }
 
-.notification {
+.lobby-notification {
     padding: 5px;
     font-weight: bold;
+    font-size: medium;
     border: 1px solid #ccc;
     border-radius: 4px;
 }
@@ -57,6 +58,10 @@
 
 .leave {
     background-color: red;
+}
+
+.winner {
+    background-color: goldenrod;
 }
 
 .lobby-names {
