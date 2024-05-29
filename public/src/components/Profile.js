@@ -8,6 +8,7 @@ const Profile = () => {
   const [userError, setUserError] = useState('');
   const [friendUsername, setFriendUsername] = useState('');
   const [notification, setNotification] = useState(null);
+  const [restaurants, setRestaurants] = useState(null);
   const [userHistory, setUserHistory] = useState([]); // State to hold user history
 
   useEffect(() => {

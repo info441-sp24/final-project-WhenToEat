@@ -22,6 +22,7 @@ const Wheel = () => {
     const [showCloseLobby, setShowCloseLobby] = useState(false);
     const [showSpinBtn, setShowSpinBtn] = useState(true);
     const [users, setUsers] = useState([]);
+    const [points, setPoints] = useState({});
     const [restaurants, setRestaurants] = useState([]);
     const [noNameError, setNoNameError] = useState('');
     const [spinError, setSpinError] = useState('');
@@ -67,17 +68,33 @@ const Wheel = () => {
     };
 
     useEffect(() => {
-        ws.onmessage = (event) => {
+        const handleWebSocketMessage = async (event) => {
             const data = JSON.parse(event.data);
             if (data.action === 'nameUpdated') {
-                setRestaurants(prevRestaurants => [...prevRestaurants, data.choice])
+                setRestaurants(prevRestaurants => [...prevRestaurants, data.choice]);
                 setUsers(prevLobby => [...prevLobby, data.name]);
                 setNotifications(prev => [...prev, data.message]);
+                setPoints(p => ({...p, [data.choice]: (p[data.choice] + 1 || 1)}));
             } else if (data.action === 'nameDisconnected') {
-                console.log(data.name, data.message)
-                setRestaurants(prevRestaurants => prevRestaurants.filter(name => name !== data.choice))
-                setUsers(prevLobby => prevLobby.filter(name => name !== data.name));
+                setRestaurants(prevRestaurants => prevRestaurants.filter(name => name !== data.choice));
+                setUsers(prevLobby => prevLobby.filter(name => name !== data.name));    
+                setPoints(p => {
+                    const newPoints = { ...p };
+                    delete newPoints[data.choice];
+                    return newPoints;
+                });
                 setNotifications(prev => [...prev, data.message]);
+                try {
+                    const response = await axios.delete(`/api/lobbies/removeUser`, {
+                        data: {
+                            lobbyName: lastLobbyName,
+                            username: data.name
+                        }
+                    });
+                    console.log('User removed from lobby:', response.data);
+                } catch (error) {
+                    console.error('Error removing user from lobby:', error);
+                }
             } else if (data.action === 'lobbyClosed') {
                 setNotifications(prev => [...prev, data.message]);
                 setShowSpinBtn(false);
@@ -202,12 +219,21 @@ const Wheel = () => {
         }
     };
 
-    const addName = async () => {
-        const name = nameInputRef.current.value.trim();
+    const addName = async (num) => {
         const restaurant = restaurantInputRef.current.value.trim();
-        if (name.length < 1 || restaurant.length < 1) {
-            setNoNameError("Both inputs must be filled out!");
-            return;
+        let name
+        if (num === 1) {
+            name = currentName
+            if (restaurant.length < 1) {
+                setNoNameError("Restaurant input must be filled out!");
+                return;
+            }
+        } else {
+            name = nameInputRef.current.value.trim();
+            if (name.length < 1 || restaurant.length < 1) {
+                setNoNameError("Both inputs must be filled out!");
+                return;
+            }
         }
         ws.send(JSON.stringify({
             action: 'updateName',
@@ -226,6 +252,7 @@ const Wheel = () => {
         let response = await axios.post('/api/lobbies/spinWheel', {
             name: lastLobbyName
         });
+        // setShowSpinBtn(false)
         if (response.data.status === "not enough") {
             setSpinError("Need at least 2 participants!")
         } else {

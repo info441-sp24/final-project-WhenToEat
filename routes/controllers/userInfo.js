@@ -73,7 +73,6 @@ router.get("/", async (req, res) => {
     }
 });
 
-<<<<<<< HEAD
 router.get("/points", async (req, res) => {
     let name = req.query.name
     console.log(name)
@@ -108,7 +107,7 @@ router.post("/setPoints", async (req, res) => {
         res.status(500).json({ "status": "error", "error": error.message });
     }
 })
-=======
+
 router.get("/userHistory", async (req, res) => {
     if (req.session.isAuthenticated) {
       try {
@@ -135,6 +134,5 @@ router.get("/userHistory", async (req, res) => {
     }
   });
   
->>>>>>> bf23009fc913e22fc1319c1e215e69869248b40c
 
 export default router;
