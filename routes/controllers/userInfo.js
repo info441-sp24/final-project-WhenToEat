@@ -73,6 +73,41 @@ router.get("/", async (req, res) => {
     }
 });
 
+router.get("/points", async (req, res) => {
+    let name = req.query.name
+    console.log(name)
+    try {
+        let user = await req.models.Users.findOne({ name: name });
+        let points = user.points
+        if (user) {
+            res.status(200).json({"status": "success", "user": user, "points": points});
+        } else {
+            res.status(404).json({ "status": "error", "error": "User not found" });
+        }
+    } catch (error) {
+        console.log(error.message)
+        res.status(500).json({ "status": "error", "error": error.message });
+    }
+})
+
+router.post("/setPoints", async (req, res) => {
+    let name = req.body.name
+    let points = req.body.points
+    try {
+        let user = await req.models.Users.findOne({ name: name });
+        if (user) {
+            user.points = points
+            user.save()
+            res.status(200).json({"status": "success"});
+        } else {
+            res.status(404).json({ "status": "error", "error": "User not found" });
+        }
+    } catch (error) {
+        console.log(error.message)
+        res.status(500).json({ "status": "error", "error": error.message });
+    }
+})
+
 router.get("/userHistory", async (req, res) => {
     if (req.session.isAuthenticated) {
       try {

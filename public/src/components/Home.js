@@ -1,4 +1,3 @@
-import axios from 'axios';
 import '../styles/Home.css'
 const Home = () => {
     return (
