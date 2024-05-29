@@ -1,6 +1,8 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 import '../styles/Wheel.css';
 import axios from 'axios';
+import wheelSpin from '../assets/wheel-spin.gif'
+import wheelSound from '../assets/wheel-sound.mp3'
 
 const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
 const hostname = window.location.hostname;
@@ -23,7 +25,6 @@ const Wheel = () => {
     const [points, setPoints] = useState({});
     const [restaurants, setRestaurants] = useState([]);
     const [noNameError, setNoNameError] = useState('');
-    const [noRestaurantError, setNoRestaurantError] = useState('');
     const [spinError, setSpinError] = useState('');
     const [existLobbyError, setExistLobbyError] = useState('');
     const [lastLobbyName, setLastLobbyName] = useState('');
@@ -31,6 +32,40 @@ const Wheel = () => {
     const [winner, setWinner] = useState("");
     const [currentName, setCurrentName] = useState("");
     const [loggedIn, setLoggedIn] = useState(false);
+    const [myPoints, setMyPoints] = useState(3)
+    const [showSpinning, setShowSpinning] = useState(false)
+
+    const closeLobby = useCallback(async () => {
+        let response = await axios.post('/api/lobbies/close', {
+            name: lastLobbyName
+        });
+
+        if (response.data.status === "success") {
+            ws.send(JSON.stringify({
+                action: 'lobbyClosed',
+                lobbyName: lastLobbyName
+            }));
+            handleLobbyClosed();
+        } else {
+            console.log('could not close lobby')
+        }
+    }, [lastLobbyName]);
+
+    const handleLobbyClosed = () => {
+        setNotifications([])
+        setUsers([])
+        setJoinedLobby(false);
+        setJoinedWheel(false);
+        setShowWinnerPopup(false);
+        setShowCloseLobby(false);
+        setShowSpinBtn(false);
+        setNoNameError('');
+        setSpinError('');
+        setExistLobbyError('');
+        setLastLobbyName('');
+        setJoinLobbyError('');
+        setWinner("");
+    };
 
     useEffect(() => {
         const handleWebSocketMessage = async (event) => {
@@ -65,15 +100,36 @@ const Wheel = () => {
                 setShowSpinBtn(false);
             } else if (data.action === 'winnerDecided') {
                 setNotifications(prev => [...prev, data.message])
+                if (loggedIn) {
+                    await axios.post('/api/userInfo/setPoints', {
+                        name: currentName,
+                        points: myPoints
+                    });
+                }
+            } else if (data.action === "pointsUpdated") {
+                const newPoints = {};
+                data.weights.forEach((weight, index) => {
+                    newPoints[restaurants[index]] = weight;
+                });
+                setPoints(newPoints);
             }
         };
 
         ws.onmessage = handleWebSocketMessage;
 
+        const handleBeforeUnload = () => {
+            if (showCloseLobby) {
+                closeLobby();
+            }
+        };
+    
+        window.addEventListener('beforeunload', handleBeforeUnload);
+
         return () => {
             ws.onmessage = null;
+            window.removeEventListener('beforeunload', handleBeforeUnload);
         };
-    }, [lastLobbyName]);
+    }, [lastLobbyName, showCloseLobby, loggedIn, currentName, myPoints, restaurants, closeLobby]);
 
     const createLobby = async () => {
         if (lobbyNameRef.current.value.trim().length === 0) {
@@ -90,6 +146,15 @@ const Wheel = () => {
                 setJoinedLobby(true);
                 setShowCloseLobby(true);
                 setShowSpinBtn(true);
+                setCurrentName(response.data.sessionName)
+                console.log(response.data.sessionName)
+                if (response.data.sessionName !== "") {
+                    console.log("true")
+                    setLoggedIn(true)
+                } else {
+                    console.log("false")
+                    setLoggedIn(false)
+                }
                 ws.send(JSON.stringify({
                     action: 'joinLobby',
                     lobbyId: response.data.lobbyId
@@ -99,13 +164,20 @@ const Wheel = () => {
             }
         } catch (error) {
             console.error('Error creating lobby:', error);
-        }
+        }        
     }
 
     const joinLobby = async () => {
         if (joinLobbyRef.current.value.trim().length === 0) {
             setJoinLobbyError('Must enter lobby name');
             return;
+        }
+
+        try {
+            let response = await axios.get(`/api/lobbies`);
+            setMyPoints(response.data.user.points)
+        } catch (error) {
+            console.error('Error joining lobby:', error);
         }
         
         try {
@@ -123,6 +195,7 @@ const Wheel = () => {
                 }
                 setLastLobbyName(joinLobbyRef.current.value.trim());
                 setPoints(response.data.weights)
+                console.log(points.toString())
                 ws.send(JSON.stringify({
                     action: 'joinLobby',
                     lobbyId: response.data.lobbyId
@@ -135,19 +208,16 @@ const Wheel = () => {
         } catch (error) {
             console.error('Error joining lobby:', error);
         }
-    };
-
-    const addRestaurant = async () => {
-        const restaurant = restaurantInputRef.current.value.trim();
-        if (restaurant.length < 1) {
-            setNoRestaurantError("Restaurant cannot be empty!");
-            return;
+        console.log(loggedIn)
+        if (loggedIn) {
+            try {
+                let response = await axios.get(`/api/userInfo?name=${currentName}`);
+                setMyPoints(response.data.user.points)
+            } catch (error) {
+                console.error('Error joining lobby:', error);
+            }
         }
-        await axios.post('/api/lobbies/addRestaurant', {
-            lobby_name: lastLobbyName,
-            restaurant: restaurant
-        })
-    }
+    };
 
     const addName = async (num) => {
         const restaurant = restaurantInputRef.current.value.trim();
@@ -186,8 +256,13 @@ const Wheel = () => {
         if (response.data.status === "not enough") {
             setSpinError("Need at least 2 participants!")
         } else {
+            new Audio(wheelSound).play()
             setWinner(response.data.winner);
             setShowWinnerPopup(true);
+            setShowSpinning(true);
+            setTimeout(() => {
+                setShowSpinning(false);
+            }, 4000);
         }
     };
 
@@ -196,141 +271,158 @@ const Wheel = () => {
         setWinner('');
     };
 
-    const closeLobby = async () => {
-        let response = await axios.post('/api/lobbies/close', {
-            name: lastLobbyName
-        });
-
-        if (response.data.status === "success") {
-            ws.send(JSON.stringify({
-                action: 'lobbyClosed',
-                lobbyName: lastLobbyName
-            }));
-            handleLobbyClosed();
-        } else {
-            console.log('could not close lobby')
+    const increasePoints = async (restaurant, restaurant_index) => {
+        if (myPoints === 0) {
+            setSpinError('Cannot add any more points, you have 0 points!');
+            return;
         }
-    };
-
-    const handleLobbyClosed = () => {
-        setNotifications([])
-        setUsers([])
-        setJoinedLobby(false);
-        setJoinedWheel(false);
-        setShowWinnerPopup(false);
-        setShowCloseLobby(false);
-        setShowSpinBtn(false);
-        setNoNameError('');
-        setSpinError('');
-        setExistLobbyError('');
-        setLastLobbyName('');
-        setJoinLobbyError('');
-        setWinner("");
-    };
-
-    const increasePoints = async (restaurant) => {
-        console.log("Inc")
         const currentPoints = (points[restaurant] || 0) + 1;
+        setMyPoints(myPoints-1)
         setPoints({ ...points, [restaurant]: currentPoints });
-        let response = await axios.post('/api/lobbies/increase', {
-            name: lastLobbyName,
-            restaurant: restaurant
+
+        ws.send(JSON.stringify({
+            action: 'addPoint',
+            lobbyName: lastLobbyName,
+            restaurant: restaurant_index
+        }));    
+
+        await axios.post('/api/lobbies/increase', {
+            lobbyName: lastLobbyName,
+            restaurant: restaurant_index
         });
     };
 
-    const decreasePoints = async (restaurant) => {
-        console.log("Dec")
+    const decreasePoints = async (restaurant, restaurant_index) => {
         const currentPoints = Math.max((points[restaurant] || 0) - 1, 0);
+        setMyPoints(myPoints+1)
         setPoints({ ...points, [restaurant]: currentPoints });
-        let response = await axios.post('/api/lobbies/decrease', {
-            name: lastLobbyName,
-            restaurant: restaurant
+
+        ws.send(JSON.stringify({
+            action: 'minusPoint',
+            lobbyName: lastLobbyName,
+            restaurant: restaurant_index
+        }));    
+
+        await axios.post('/api/lobbies/decrease', {
+            lobbyName: lastLobbyName,
+            restaurant: restaurant_index
         });
     };
+
+    useEffect(() => {
+        const getPoints = async () => {
+            if (loggedIn) {
+                try {
+                    let response = await axios.get(`/api/userInfo/points?name=${currentName}`);
+                    setMyPoints(response.data.user.points)
+                } catch (error) {
+                    console.error('Error joining lobby:', error);
+                }
+            }
+        }
+
+        if (joinedLobby) {
+            getPoints();
+        }
+    }, [joinedLobby, joinedWheel, loggedIn, currentName]);
 
     return (
         <div className="wheel-container">
-            {showWinnerPopup && <div class="overlay" />}
-            {joinedLobby && (
-                <h1>Let's Choose a Restaurant!</h1>
-            )}
-            {!joinedLobby && (
-                <div className="lobby-setup">
-                    <div className="create-lobby">
-                        <h2>Create a New Lobby:</h2>
-                        <input ref={lobbyNameRef} placeholder="Enter New Lobby Name" /><br />
-                        <button onClick={createLobby}>Create Lobby</button>
-                        <p className="wheel-error">{existLobbyError}</p>
-                    </div>
-                    <div className="join-lobby">
-                        <h2>Or Join Your Friend's Lobby:</h2>
-                        <input ref={joinLobbyRef} placeholder="Enter Friend's Lobby Name" /><br />
-                        <button onClick={joinLobby}>Join Lobby</button>
-                        <p className="wheel-error">{joinLobbyError}</p>
-                    </div>
-                </div>
-            )}
-            {joinedLobby && (
-                <div className="lobby">
-                    <div className="lobby-name-display">
-                        <div>Lobby Name: <span style={{ fontStyle: 'italic', fontWeight: 'bold' }}>{lastLobbyName}</span></div>
-                        {showCloseLobby && (
-                            <button onClick={closeLobby} class="close-lobby">Close Lobby</button>
-                        )}
-                    </div>
-                    {!joinedWheel && (
-                        <div className="join-wheel">
-                            { loggedIn ? (
-                                <div>
-                                    <h2>Name: {currentName}</h2>
-                                    <input ref={restaurantInputRef} placeholder='Choose a Restaurant' /><br />
-                                    <button onClick={() => addName(1)}>Join the Wheel!</button>
-                                    <p className="wheel-error">{noNameError}</p>
-                                </div>
-                                ) : 
-                                <div>
-                                    <input ref={nameInputRef} placeholder='Your Name' /><br />
-                                    <input ref={restaurantInputRef} placeholder='Choose a Restaurant' /><br />
-                                    <button onClick={() => addName(2)}>Join the Wheel!</button>
-                                    <p className="wheel-error">{noNameError}</p>
-                                </div>
-                            }
-                        </div>
-                    )}
-                    <h2>Lobby Notifications:</h2>
-                    <div className="lobby-notifications">
-                        {notifications.map((notifications, index) => (
-                            <div key={index} className={`lobby-notification ${
-                                notifications.includes("joined") ? "join" :
-                                notifications.includes("winner") ? "winner" :
-                                "leave"}`}>
-                                {notifications}
-                            </div>
-                        ))}
-                    </div>
-                    <h2>People in lobby:</h2>
-                    <div className="lobby-names">
-                        {users.map((name, index) => (
-                            <div key={index} className="lobby-name">
-                                <div>{name}'s Restaurant : <span style={{ textDecoration: 'underline' }}>{restaurants[index] ? restaurants[index] : 'No choice selected'}</span></div>
-                                <div className="points-controls">
-                                    <button onClick={() => increasePoints(restaurants[index])}>∧</button>
-                                    <span>{points[restaurants[index]] || 0}</span>
-                                    <button onClick={() => decreasePoints(restaurants[index])}>∨</button>
-                                </div>
-                            </div>
-                        ))}
-                    </div><br />
-                    {showSpinBtn && (
-                        <button onClick={spinWheel} className='spin-wheel'>Spin The Wheel!</button>
-                    )}
-                    <p className='wheel-error'>{spinError}</p>
-                </div>
-            )}
-            <div className={`popup ${showWinnerPopup ? 'show' : ''}`}>
-                <h2>The winner is {winner}</h2>
-                <button onClick={closeWinnerPopup}>Close</button>
+          {showWinnerPopup && <div className="overlay" />}
+          {joinedLobby && <h1>Let's Choose a Restaurant!</h1>}
+          {!joinedLobby && (
+            <div className="lobby-setup">
+              <div className="create-lobby">
+                <h2>Create a New Lobby:</h2>
+                <input ref={lobbyNameRef} placeholder="Enter New Lobby Name" /><br />
+                <button onClick={createLobby}>Create Lobby</button>
+                <p className="wheel-error">{existLobbyError}</p>
+              </div>
+              <div className="join-lobby">
+                <h2>Or Join Your Friend's Lobby:</h2>
+                <input ref={joinLobbyRef} placeholder="Enter Friend's Lobby Name" /><br />
+                <button onClick={joinLobby}>Join Lobby</button>
+                <p className="wheel-error">{joinLobbyError}</p>
+              </div>
             </div>
+          )}
+          {joinedLobby && (
+            <div className="lobby">
+              <div className="lobby-name-display">
+                <div>Lobby Name: <span style={{ fontStyle: 'italic', fontWeight: 'bold' }}>{lastLobbyName}</span></div>
+                {showCloseLobby && (
+                  <button onClick={closeLobby} className="close-lobby">Close Lobby</button>
+                )}
+              </div>
+              {!joinedWheel && (
+                <div className="join-wheel">
+                  { loggedIn ? (
+                    <div>
+                      <h2>Name: {currentName}</h2>
+                      <input ref={restaurantInputRef} placeholder='Choose a Restaurant' /><br />
+                      <button onClick={() => addName(1)}>Join the Wheel!</button>
+                      <p className="wheel-error">{noNameError}</p>
+                    </div>
+                    ) : (
+                    <div>
+                      <input ref={nameInputRef} placeholder='Your Name' /><br />
+                      <input ref={restaurantInputRef} placeholder='Choose a Restaurant' /><br />
+                      <button onClick={() => addName(2)}>Join the Wheel!</button>
+                      <p className="wheel-error">{noNameError}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+              <div>
+                <h2>
+                    Your Points: {myPoints}
+                </h2>
+              </div>
+              <div className="lobby-notifications-container">
+                <div className="box lobby-names">
+                  <h2>People in lobby:</h2>
+                  {users.map((name, index) => (
+                    <div key={index} className="lobby-name">
+                      <div>{name}'s Restaurant : <span style={{ textDecoration: 'underline' }}>{restaurants[index] ? restaurants[index] : 'No choice selected'}</span></div>
+                      <div className="points-controls">
+                        <button onClick={() => increasePoints(restaurants[index], index)}>∧</button>
+                        <span>{points[restaurants[index]] || 0}</span>
+                        <button onClick={() => decreasePoints(restaurants[index], index)} disabled={points[restaurants[index]] === 0}>∨</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="box lobby-notifications">
+                  <h2>Lobby Notifications:</h2>
+                  {notifications.map((notification, index) => (
+                    <div key={index} className={`lobby-notification ${
+                      notification.includes("joined") ? "join" :
+                      notification.includes("winner") ? "winner" :
+                      "leave"}`}>
+                      {notification}
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <br />
+              {showSpinBtn && (
+                <button onClick={spinWheel} className='spin-wheel'>Spin The Wheel!</button>
+              )}
+              <p className='wheel-error'>{spinError}</p>
+            </div>
+          )}
+          <div className={`popup ${showWinnerPopup ? 'show' : ''}`}>
+            { showSpinning ? (
+                <div className='spinner-container'>
+                    <img src={wheelSpin} alt="Wheel Spin" className={showSpinning ? 'spinning' : ''} />
+                </div>
+            ) : (
+                <div>
+                    <h2>The winner is {winner}</h2>
+                    <button onClick={closeWinnerPopup}>Close</button>
+                </div>
+            )} 
+          </div>
         </div>
     );
 }

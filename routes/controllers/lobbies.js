@@ -6,6 +6,7 @@ enableWs(router);
 
 let socketCounter = 0
 let allSockets = []
+let weights = [];
 
 router.ws("/wheelSocket", (ws, res) => {
     let mySocketNum;
@@ -27,8 +28,10 @@ router.ws("/wheelSocket", (ws, res) => {
                     allSockets[myLobbyId][mySocketNum] = {
                         socket: ws,
                         name: mySocketNum,
-                        restaurant: ""
+                        restaurant: "",
                     };
+                    weights.push(1)
+                    console.log(weights)
                     console.log(`User ${mySocketNum} connected to lobby ${myLobbyId} via websocket`);
                     break;
                 case 'updateName':
@@ -36,10 +39,22 @@ router.ws("/wheelSocket", (ws, res) => {
                     if (myLobbyId && allSockets[myLobbyId][mySocketNum]) {
                         allSockets[myLobbyId][mySocketNum].name = socketMsg.name;
                         allSockets[myLobbyId][mySocketNum].restaurant = socketMsg.restaurant;
+                        allSockets[myLobbyId][mySocketNum].points = 1;
                         console.log(`User ${mySocketNum} in lobby ${myLobbyId} updated name to ${socketMsg.name}`);
                         console.log(`User ${mySocketNum} in lobby ${myLobbyId} updated restaurant to ${socketMsg.restaurant}`);
-                        broadcastNotification(myLobbyId, `${socketMsg.name} has joined the lobby (${socketMsg.restaurant})`, 'nameUpdated', socketMsg.name, socketMsg.restaurant);
+                        broadcastNotification(myLobbyId, `${socketMsg.name} has joined the lobby (${socketMsg.restaurant})`,
+                            'nameUpdated', socketMsg.name, socketMsg.restaurant, []);
                     }
+                    break;
+                case 'addPoint':
+                    weights[socketMsg.restaurant] = weights[socketMsg.restaurant] + 1
+                    console.log(`just plus on ${socketMsg.restaurant}`, weights.toString())
+                    broadcastNotification(myLobbyId, "", "pointsUpdated", "", "", weights)
+                    break;
+                case 'minusPoint':
+                    weights[socketMsg.restaurant] = weights[socketMsg.restaurant] - 1
+                    console.log(`just minus on ${socketMsg.restaurant}`, weights.toString())
+                    broadcastNotification(myLobbyId, "", "pointsUpdated", "", "", weights)
                     break;
             }
         } catch (error) {
@@ -50,7 +65,8 @@ router.ws("/wheelSocket", (ws, res) => {
     ws.on('close', () => {
         if (myLobbyId && mySocketNum && allSockets[myLobbyId] && allSockets[myLobbyId][mySocketNum]) {
             console.log(`User ${mySocketNum} from lobby ${myLobbyId} has disconnected`);
-            broadcastNotification(myLobbyId, `${allSockets[myLobbyId][mySocketNum].name} has disconnected`, 'nameDisconnected', allSockets[myLobbyId][mySocketNum].name, "");
+            broadcastNotification(myLobbyId, `${allSockets[myLobbyId][mySocketNum].name} has disconnected`, 'nameDisconnected',
+                allSockets[myLobbyId][mySocketNum].name, allSockets[myLobbyId][mySocketNum].restaurant, []);
             delete allSockets[myLobbyId][mySocketNum];
             if (Object.keys(allSockets[myLobbyId]).length === 0) {
                 delete allSockets[myLobbyId];
@@ -59,12 +75,13 @@ router.ws("/wheelSocket", (ws, res) => {
     });
 })
 
-function broadcastNotification(lobbyId, message, action, name, choice) {
+function broadcastNotification(lobbyId, message, action, name, choice, weights) {
     const notification = JSON.stringify({
         action: action,
         message: message,
         name: name,
-        choice: choice
+        choice: choice,
+        weights: weights
     });
 
     if (allSockets[lobbyId]) {
@@ -110,13 +127,13 @@ router.post("/", async (req, res) => {
             status: true 
         });
         await newLobby.save();
-        res.json({"status": "success", "lobbyId": newLobby._id});
+        const sessionName = req.session.isAuthenticated ? req.session.account.name : "";
+        res.json({"status": "success", "lobbyId": newLobby._id, "sessionName": sessionName});
     }
 });
 
 router.post("/spinWheel", async (req, res) => {
     try {
-        // get the winner
         const lobbyToSpin = await req.models.Lobbies.findOne({ lobby_name: req.body.name });
         console.log("users in lobby:", lobbyToSpin.users, "notification list:", req.body.notis);
         let choices = lobbyToSpin.choices
@@ -124,9 +141,22 @@ router.post("/spinWheel", async (req, res) => {
             res.json({"status" : "not enough"})
             return
         }
-        let randomNum = Math.floor(Math.random() * choices.length)
-        broadcastNotification(lobbyToSpin._id, `The winner is ${choices[randomNum].restaurant} (${choices[randomNum].user_added})!!!`, 'winnerDecided', "", "");
-        res.json({"status": "success", "winner": choices[randomNum].restaurant })
+        let inputs = []
+        choices.forEach((choice, index) => {
+            const weight = weights[index];
+            for (let i = 0; i < weight; i++) {
+                inputs.push(choice);
+            }
+        });
+        
+        let randomNum = Math.floor(Math.random() * inputs.length)
+        console.log(inputs, randomNum)
+        const winningChoice = inputs[randomNum];
+        const winnerName = winningChoice.user_added;
+        const winnerRestaurant = winningChoice.restaurant;
+        broadcastNotification(lobbyToSpin._id, `The winner is ${winnerRestaurant} (${winnerName})!!!`,
+            'winnerDecided', "", "", []);
+        res.json({"status": "success", "winner": winnerRestaurant })
     } catch (error) {
         console.log("Error:", error);
         res.status(500).json({"status": "error", "error": error});
@@ -142,7 +172,7 @@ router.post("/close", async (req, res) => {
             lobbyToClose.status = false
             await lobbyToClose.save()
         }
-        broadcastNotification(lobbyToClose._id, `Host (${lobbyToClose.users[0]}) has closed the lobby`, 'lobbyClosed', "", "");
+        broadcastNotification(lobbyToClose._id, `Host (${lobbyToClose.users[0]}) has closed the lobby`, 'lobbyClosed', "", "", []);
         res.json({"status": "success"})
     } catch (error) {
         console.log("Error:", error);
@@ -170,12 +200,35 @@ router.post("/addName", async (req, res) => {
 })
 
 router.post("/increase", async (req, res) => {
-    res.send("increase")
-
+    try {
+        const { lobbyName, restaurant } = req.body;
+        const lobby = await req.models.Lobbies.findOne({ lobby_name: lobbyName });
+        if (!lobby) {
+            return res.status(404).json({ error: "Lobby not found" });
+        }
+        lobby.choices[restaurant].weight += 1;
+        await lobby.save()
+        res.json({ status: "success" })
+    } catch (error) {
+        console.error("Error removing user from lobby:", error);
+        res.status(500).json({ error: "An error occurred while removing the user from the lobby" });
+    }
 })
 
 router.post("/decrease", async (req, res) => {
-    res.send("decrease")
+    try {
+        const { lobbyName, restaurant } = req.body;
+        const lobby = await req.models.Lobbies.findOne({ lobby_name: lobbyName });
+        if (!lobby) {
+            return res.status(404).json({ error: "Lobby not found" });
+        }
+        lobby.choices[restaurant].weight -= 1;
+        await lobby.save()
+        res.json({ status: "success" })
+    } catch (error) {
+        console.error("Error removing user from lobby:", error);
+        res.status(500).json({ error: "An error occurred while removing the user from the lobby" });
+    }
 })
 
 router.delete("/removeUser", async (req, res) => {
