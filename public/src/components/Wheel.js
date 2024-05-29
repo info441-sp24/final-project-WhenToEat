@@ -175,7 +175,7 @@ const Wheel = () => {
 
         try {
             let response = await axios.get(`/api/lobbies`);
-            setMyPoints(response.data.user.points)
+            setPoints(response.data.points)
         } catch (error) {
             console.error('Error joining lobby:', error);
         }
@@ -194,6 +194,7 @@ const Wheel = () => {
                     setLoggedIn(false)
                 }
                 setLastLobbyName(joinLobbyRef.current.value.trim());
+                console.log("getting points", response.data.weights)
                 setPoints(response.data.weights)
                 console.log(points.toString())
                 ws.send(JSON.stringify({
