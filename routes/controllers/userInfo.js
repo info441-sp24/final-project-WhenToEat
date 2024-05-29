@@ -1,5 +1,7 @@
 import express from 'express';
 var router = express.Router();
+import models from '../../models.js'
+
 
 router.post("/", async (req, res, next) => {
     if (req.session.isAuthenticated) {
@@ -54,11 +56,10 @@ router.get("/", async (req, res) => {
                 res.status(400).json({ "status": "error", "error": "Username is required" });
             } else {
                 let user = await req.models.Users.findOne({ username: username });
-                if (user) {
-                    res.status(200).json({"status": "success", "user": user});
-                } else {
-                    res.status(404).json({ "status": "error", "error": "User not found" });
-                }
+                let userHistory = await req.models.UserHistory.find({ user_id: username });
+
+                res.status(200).json({"status": "success", "user": user, "history": userHistory});
+        
             }
         } catch (error) {
             console.log(error.message)

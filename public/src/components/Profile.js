@@ -5,11 +5,10 @@ import '../styles/Profile.css';
 
 const Profile = () => {
   const [user, setUser] = useState(null);
-  const [userError, setUserError] = useState('')
+  const [userError, setUserError] = useState('');
   const [friendUsername, setFriendUsername] = useState('');
   const [notification, setNotification] = useState(null);
-  // const [isEditing, setIsEditing] = useState(false);
-  // const [editedName, setEditedName] = useState("");
+  const [userHistory, setUserHistory] = useState([]); // State to hold user history
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.hash.split('?')[1]);
@@ -21,8 +20,7 @@ const Profile = () => {
           let response = await axios.get(`/api/userInfo?username=${username}`);
           if (response.data.status === "success") {
             setUser(response.data.user);
-            console.log(response.data)
-            // setEditedName(response.data.name);
+            setUserHistory(response.data.history); // Set user history data
           } else {
             setUserError('Failed to fetch user data');
           }
@@ -60,67 +58,44 @@ const Profile = () => {
 
   }, []);
 
-  // const handleNameChange = (event) => {
-  //   setEditedName(event.target.value);
-  // };
-
-  // const handleEdit = () => {
-  //   setIsEditing(true);
-  // };
-
-  // const handleSave = async () => {
-  //   try {
-  //     const response = await axios.put('/api/users', {
-  //       username: user.username, 
-  //       name: editedName
-  //     });
-  //     if (response.data.status === "success") {
-  //       setUser(prevState => ({ ...prevState, name: editedName }));
-  //       setIsEditing(false);
-  //     }
-  //   } catch (error) {
-  //     console.error('Failed to save changes', error);
-  //   }
-  // };
-
   const handleAddFriend = async () => {
     try {
-        const response = await axios.post('/api/friends/add', {
-            username: user.username,
-            friendname: friendUsername
-        });
-        if (response.data.message) {
-            setNotification(response.data.message);
-            setUser(prevUser => ({
-              ...prevUser,
-              friends: [...prevUser.friends, friendUsername]
-            }));
-        }
-        setFriendUsername('');
+      const response = await axios.post('/api/friends/add', {
+        username: user.username,
+        friendname: friendUsername
+      });
+      if (response.data.message) {
+        setNotification(response.data.message);
+        setUser(prevUser => ({
+          ...prevUser,
+          friends: [...prevUser.friends, friendUsername]
+        }));
+      }
+      setFriendUsername('');
     } catch (error) {
-        console.error('Failed to add friend', error);
-        setNotification('Failed to add friend');
+      console.error('Failed to add friend', error);
+      setNotification('Failed to add friend');
     }
-};
+  };
 
-const handleRemoveFriend = async (friendUsername) => {
-  try {
-    const response = await axios.post('/api/friends/remove', {
-      username: user.username,
-      friendname: friendUsername
-    });
-    if (response.data.message) {
-      setNotification(response.data.message);
-      setUser(prevUser => ({
-        ...prevUser,
-        friends: prevUser.friends.filter(f => f !== friendUsername)
-      }));
+  const handleRemoveFriend = async (friendUsername) => {
+    try {
+      const response = await axios.post('/api/friends/remove', {
+        username: user.username,
+        friendname: friendUsername
+      });
+      if (response.data.message) {
+        setNotification(response.data.message);
+        setUser(prevUser => ({
+          ...prevUser,
+          friends: prevUser.friends.filter(f => f !== friendUsername)
+        }));
+      }
+    } catch (error) {
+      console.error('Failed to remove friend', error);
+      setNotification('Failed to remove friend');
     }
-  } catch (error) {
-    console.error('Failed to remove friend', error);
-    setNotification('Failed to remove friend');
-  }
-};
+  };
 
   return (
     <div>
@@ -130,11 +105,6 @@ const handleRemoveFriend = async (friendUsername) => {
           <div className="profile-info">
             <h1>{user.username}</h1>
             <p>Points: {user.points}</p>
-          {/* <button onClick={handleEdit}>Edit Profile</button> */}
-            
-            <div>
-              <h1>Restaurants Visited</h1>
-            </div>
           </div>
           <div>
             <div className="addFriend">
@@ -148,16 +118,27 @@ const handleRemoveFriend = async (friendUsername) => {
             </div>
             <div className="friendsList">
               <h1>Friends List</h1>
-              {user.friends.map((friend) => (
-                <div className="friendCard">
+              {user.friends.map((friend, index) => (
+                <div key={index} className="friendCard">
                   <p>{friend}</p>
                   <button onClick={() => handleRemoveFriend(friend)}>Remove Friend</button>
                 </div>
               ))}
             </div>
           </div>
+          <div>
+            <h1>Restaurants Visited</h1>
+            <ul>
+              {userHistory.map((visit, index) => (
+                <li key={index}>
+                  <p>Restaurant Name: {visit.restaurant_name}</p>
+                  <p>Date Visited: {new Date(visit.date_visited).toLocaleDateString()}</p>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
-       ) : (
+      ) : (
         <div><h1>{userError}</h1></div>
       )} 
     </div>
