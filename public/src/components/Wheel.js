@@ -253,7 +253,7 @@ const Wheel = () => {
         let response = await axios.post('/api/lobbies/spinWheel', {
             name: lastLobbyName
         });
-        // setShowSpinBtn(false)
+        setShowSpinBtn(false)
         if (response.data.status === "not enough") {
             setSpinError("Need at least 2 participants!")
         } else {
