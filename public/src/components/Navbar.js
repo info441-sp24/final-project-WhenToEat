@@ -51,9 +51,9 @@ const Navbar = () => {
 					</li>
 					{!loading && identityInfo && identityInfo.status === 'loggedin' && (
 						<li>
-								<NavLink to={`/profile?user=${identityInfo.userInfo.username}`}>
-										Profile
-								</NavLink>
+							<NavLink to={`/profile?user=${identityInfo.userInfo.username}`}>
+									Profile
+							</NavLink>
 						</li>
 					)}
 				</ul>

@@ -114,13 +114,13 @@ const Explore = () => {
             <div className="filter-search">
                 <div className="search-input">
                     <h6 className="search-label">Search By Name</h6>
-                    <input type="text"
+                    <input className="exploreinput" type="text"
                         value={searchQuery}
                         onChange={handleSearchChange} />
                 </div>
                 <div className="location-input">
                     <h6 className="search-label">Location</h6>
-                    <input type="text"
+                    <input className="exploreinput" type="text"
                         value={location}
                         onChange={handleLocationChange} />
                 </div>

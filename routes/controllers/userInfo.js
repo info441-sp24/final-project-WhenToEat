@@ -73,5 +73,31 @@ router.get("/", async (req, res) => {
     }
 });
 
+router.get("/userHistory", async (req, res) => {
+    if (req.session.isAuthenticated) {
+      try {
+        const username = req.query.username;
+        if (!username) {
+          return res.status(400).json({ "status": "error", "error": "Username is required" });
+        }
+  
+        const user = await models.Users.findOne({ username: username });
+        if (!user) {
+          return res.status(404).json({ "status": "error", "error": "User not found" });
+        }
+  
+        const userHistory = await models.UserHistory.find({ user_id: user._id }).populate('restaurant_id');
+        const restaurants = userHistory.map(entry => entry.restaurant_id);
+  
+        return res.status(200).json({ "status": "success", "restaurants": restaurants });
+      } catch (error) {
+        console.log(error.message);
+        return res.status(500).json({ "status": "error", "error": error.message });
+      }
+    } else {
+      return res.status(401).json({ "status": "error", "error": "Not logged in" });
+    }
+  });
+  
 
 export default router;

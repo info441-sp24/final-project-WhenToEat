@@ -14,7 +14,7 @@ const Profile = () => {
     const urlParams = new URLSearchParams(window.location.hash.split('?')[1]);
     const username = urlParams.get('user');
 
-    const fetchUser = async () => {
+    const fetchUserData = async () => {
       try {
         if (username !== null) {
           let response = await axios.get(`/api/userInfo?username=${username}`);
@@ -37,7 +37,25 @@ const Profile = () => {
       }
     };
 
-    fetchUser();
+    const fetchUserRestaurants = async (username) => {
+      try {
+        console.log('Fetching user history for username:', username); // Debugging log
+        const restaurantsResponse = await axios.get(`/api/userInfo/userHistory?username=${username}`);
+        console.log('User history response:', restaurantsResponse.data); // Debugging log
+
+        if (restaurantsResponse.data.status === 'success') {
+          setRestaurants(restaurantsResponse.data.restaurants);
+        } else {
+          setUserError('Failed to fetch restaurants data');
+        }
+      } catch (error) {
+        console.error('Failed to fetch user restaurants', error);
+        setUserError('An error occurred while fetching restaurants data');
+      }
+    };
+
+    fetchUserData();
+
   }, []);
 
   const handleAddFriend = async () => {
