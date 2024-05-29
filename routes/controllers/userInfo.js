@@ -1,5 +1,7 @@
 import express from 'express';
 var router = express.Router();
+import models from '../../models.js'
+
 
 router.post("/", async (req, res, next) => {
     if (req.session.isAuthenticated) {
@@ -54,11 +56,10 @@ router.get("/", async (req, res) => {
                 res.status(400).json({ "status": "error", "error": "Username is required" });
             } else {
                 let user = await req.models.Users.findOne({ username: username });
-                if (user) {
-                    res.status(200).json({"status": "success", "user": user});
-                } else {
-                    res.status(404).json({ "status": "error", "error": "User not found" });
-                }
+                let userHistory = await req.models.UserHistory.find({ user_id: username });
+
+                res.status(200).json({"status": "success", "user": user, "history": userHistory});
+        
             }
         } catch (error) {
             console.log(error.message)
@@ -72,6 +73,7 @@ router.get("/", async (req, res) => {
     }
 });
 
+<<<<<<< HEAD
 router.get("/points", async (req, res) => {
     let name = req.query.name
     console.log(name)
@@ -106,5 +108,33 @@ router.post("/setPoints", async (req, res) => {
         res.status(500).json({ "status": "error", "error": error.message });
     }
 })
+=======
+router.get("/userHistory", async (req, res) => {
+    if (req.session.isAuthenticated) {
+      try {
+        const username = req.query.username;
+        if (!username) {
+          return res.status(400).json({ "status": "error", "error": "Username is required" });
+        }
+  
+        const user = await models.Users.findOne({ username: username });
+        if (!user) {
+          return res.status(404).json({ "status": "error", "error": "User not found" });
+        }
+  
+        const userHistory = await models.UserHistory.find({ user_id: user._id }).populate('restaurant_id');
+        const restaurants = userHistory.map(entry => entry.restaurant_id);
+  
+        return res.status(200).json({ "status": "success", "restaurants": restaurants });
+      } catch (error) {
+        console.log(error.message);
+        return res.status(500).json({ "status": "error", "error": error.message });
+      }
+    } else {
+      return res.status(401).json({ "status": "error", "error": "Not logged in" });
+    }
+  });
+  
+>>>>>>> bf23009fc913e22fc1319c1e215e69869248b40c
 
 export default router;

@@ -45,12 +45,11 @@ console.log("mongoose model Wheels created");
 
 const user_historySchema = new mongoose.Schema({
   user_id: String,
-  restaurant_id: String,
-  date_visited: Date,
-  rating: Number
+  restaurant_name: String,
+  date_visited: Date
 });
 
-models.UserHistory = mongoose.model('User History', user_historySchema);
+models.UserHistory = mongoose.model('UserHistory', user_historySchema);
 
 console.log("mongoose model User History created");
 

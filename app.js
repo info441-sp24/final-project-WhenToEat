@@ -15,8 +15,13 @@ const authConfig = {
    	    clientId: "9d847080-a50c-4380-b3ca-51246ba36d9c",
     	authority: "https://login.microsoftonline.com/f6b6dd5b-f02f-441a-99a0-162ac5060bd2",
     	clientSecret: "Yiq8Q~Tnr9nKPwFmapOdiOlhlTV1-Dfb8C2zacBj",
+<<<<<<< HEAD
     	redirectUri: "/redirect"
       // redirectUri: "https://when2eat.quangissocool.me/redirect"
+=======
+    	// redirectUri: "/redirect"
+      redirectUri: "/redirect"
+>>>>>>> bf23009fc913e22fc1319c1e215e69869248b40c
     },
 	system: {
     	loggerOptions: {
