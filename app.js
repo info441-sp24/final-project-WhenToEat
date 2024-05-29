@@ -6,6 +6,8 @@ import cors from 'cors';
 import enableWs from 'express-ws';
 import sessions from 'express-session';
 import WebAppAuthProvider from 'msal-node-wrapper'
+import cron from 'node-cron'
+import axios from 'axios'
 // import httpProxyMiddleware from 'http-proxy-middleware'
 
 const authConfig = {
@@ -13,7 +15,8 @@ const authConfig = {
    	    clientId: "9d847080-a50c-4380-b3ca-51246ba36d9c",
     	authority: "https://login.microsoftonline.com/f6b6dd5b-f02f-441a-99a0-162ac5060bd2",
     	clientSecret: "Yiq8Q~Tnr9nKPwFmapOdiOlhlTV1-Dfb8C2zacBj",
-    	redirectUri: "/redirect"
+    	// redirectUri: "/redirect"
+      redirectUri: "https://when2eat.quangissocool.me/redirect"
     },
 	system: {
     	loggerOptions: {
@@ -74,5 +77,22 @@ app.get('/signout', (req, res, next) => {
 
 app.use('/api', apiRouter);
 app.use(authProvider.interactionErrorHandler());
+
+cron.schedule('0 0 * * *', async () => {
+    try {
+      const usersResponse = await axios.get('/api/users');
+      const users = usersResponse.data;
+  
+      for (const user of users) {
+        await axios.post('/api/users/addPoints', {
+          userId: user.id,
+          points: 10,
+        });
+      }
+      console.log('Points added to all users');
+    } catch (error) {
+      console.error('Error adding points to users:', error);
+    }
+  });
 
 export default app;

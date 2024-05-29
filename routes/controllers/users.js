@@ -20,4 +20,30 @@ router.get('/myIdentity', function (req, res, next) {
     }
 });
 
+router.get("/", async (req, res) => {
+    try {
+        let users = await req.models.Users.find(); // Await the query to get the data
+        res.json(users);
+    } catch (error) {
+        res.status(500).send('Server Error');
+    }
+});
+
+router.post("/addPoints", async (req, res) => {
+    const { userId, points } = req.body;
+    console.log(userId, points)
+    try {
+        const user = await req.models.Users.findById(userId);
+        console.log(user)
+        if (!user) {
+            return res.status(404).send('User not found');
+        }
+        user.points += Number(points);;
+        await user.save();
+        res.json(user);
+    } catch (error) {
+        res.status(500).send('Server Error');
+    }
+})
+
 export default router;

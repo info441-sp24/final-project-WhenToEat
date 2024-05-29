@@ -1,37 +1,79 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import RestaurantCard from './RestaurantCard';
-import '../styles/Explore.css'
+import '../styles/Explore.css';
+import debounce from 'lodash.debounce';
 
 const Explore = () => {
     const [searchQuery, setSearchQuery] = useState("");
+    const [location, setLocation] = useState("University of Washington");
+    const [distance, setDistance] = useState(10);
     const [filteredRestaurants, setFilteredRestaurants] = useState([]);
     const [selectedCuisine, setSelectedCuisine] = useState("");
     const [uniqueCuisines, setUniqueCuisines] = useState([]);
     const [selectedPriceRange, setSelectedPriceRange] = useState([]);
     const [selectedRatings, setSelectedRatings] = useState([]);
-
-    useEffect(() => {
-        fetchRestaurants();
-    }, []);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
 
     const fetchRestaurants = async () => {
+        setLoading(true);
         try {
-            const response = await fetch(`/api/explore`);
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
+            const response = await fetch('/api/explore');
+            if (!response.ok) throw new Error('Network response was not ok');
             const data = await response.json();
             setFilteredRestaurants(data);
 
-            const cuisines = [...new Set(data.map(restaurant => restaurant.cuisine))];
+            const cuisines = [...new Set(data.map(restaurant => restaurant.categories[0]?.title))];
             setUniqueCuisines(cuisines);
         } catch (error) {
             console.error('Error fetching restaurants:', error);
+            setError('Error fetching restaurants');
+        } finally {
+            setLoading(false);
         }
     };
 
+    const debouncedApplyFilters = useCallback(
+        debounce(async (params) => {
+            setLoading(true);
+            try {
+                const queryParams = new URLSearchParams(params);
+                const response = await fetch(`/api/explore?${queryParams.toString()}`);
+                if (!response.ok) throw new Error('Network response was not ok');
+                const data = await response.json();
+                setFilteredRestaurants(data);
+            } catch (error) {
+                console.error('Error applying filters:', error);
+                setError('Error applying filters');
+            } finally {
+                setLoading(false);
+            }
+        }, 500),
+        []
+    );
+
+    useEffect(() => {
+        const params = {
+            searchQuery,
+            location,
+            distance,
+            selectedCuisine,
+            selectedPriceRange: selectedPriceRange.join(','),
+            selectedRatings: selectedRatings.join(','),
+        };
+        debouncedApplyFilters(params);
+    }, [searchQuery, location, distance, selectedCuisine, selectedPriceRange, selectedRatings]);
+
     const handleSearchChange = (event) => {
         setSearchQuery(event.target.value);
+    };
+
+    const handleLocationChange = (event) => {
+        setLocation(event.target.value);
+    };
+
+    const handleDistanceChange = (event) => {
+        setDistance(event.target.value);
     };
 
     const handleCuisineChange = (event) => {
@@ -39,50 +81,28 @@ const Explore = () => {
     };
 
     const handlePriceRangeChange = (priceRange) => {
-        setSelectedPriceRange((prev) => {
-            return prev.includes(priceRange)
+        setSelectedPriceRange((prev) =>
+            prev.includes(priceRange)
                 ? prev.filter((p) => p !== priceRange)
-                : [...prev, priceRange];
-        });
+                : [...prev, priceRange]
+        );
     };
 
     const handleRatingChange = (rating) => {
-        setSelectedRatings((prev) => {
-            return prev.includes(rating)
+        setSelectedRatings((prev) =>
+            prev.includes(rating)
                 ? prev.filter((r) => r !== rating)
-                : [...prev, rating];
-        });
+                : [...prev, rating]
+        );
     };
-
-    const applyFilters = async () => {
-        try {
-            const queryParams = new URLSearchParams({
-                searchQuery,
-                selectedCuisine,
-                selectedPriceRange: selectedPriceRange.join(','),
-                selectedRatings: selectedRatings.join(','),
-            });
-
-            const response = await fetch(`/api/explore?${queryParams.toString()}`);
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            const data = await response.json();
-            setFilteredRestaurants(data);
-        } catch (error) {
-            console.error('Error applying filters:', error);
-        }
-    };
-
-    useEffect(() => {
-        applyFilters();
-    }, [selectedCuisine, selectedPriceRange, selectedRatings, searchQuery]);
 
     const handleClearFilters = () => {
+        setSearchQuery("");
+        setLocation("University of Washington");
+        setDistance(10);
         setSelectedCuisine("");
         setSelectedPriceRange([]);
         setSelectedRatings([]);
-        setSearchQuery("");
         fetchRestaurants();
     };
 
@@ -94,12 +114,25 @@ const Explore = () => {
             <div className="filter-search">
                 <div className="search-input">
                     <h6 className="search-label">Search By Name</h6>
-                    <input type="text"
+                    <input className="exploreinput" type="text"
                         value={searchQuery}
                         onChange={handleSearchChange} />
                 </div>
-                <div className="filter-form">    
-                    
+                <div className="location-input">
+                    <h6 className="search-label">Location</h6>
+                    <input className="exploreinput" type="text"
+                        value={location}
+                        onChange={handleLocationChange} />
+                </div>
+                <div className="distance-input">
+                    <h6 className="search-label">Distance (miles)</h6>
+                    <select value={distance} onChange={handleDistanceChange}>
+                        {[1, 5, 10, 15, 20, 25, 50].map((dist) => (
+                            <option key={dist} value={dist}>{dist} miles</option>
+                        ))}
+                    </select>
+                </div>
+                <div className="filter-form">
                     <div className="cuisine-filter p-3">
                         <h6 className="filter-title">Filter by Cuisine</h6>
                         <select
@@ -117,7 +150,7 @@ const Explore = () => {
                     </div>
                     <div className="price-range-filter p-2 mx-2 border-top">
                         <h6>Filter by Price Range</h6>
-                        {["$", "$$", "$$$"].map((priceRange) => (
+                        {["1", "2", "3", "4"].map((priceRange) => (
                             <div key={priceRange}>
                                 <input
                                     type="checkbox"
@@ -125,7 +158,7 @@ const Explore = () => {
                                     checked={selectedPriceRange.includes(priceRange)}
                                     onChange={() => handlePriceRangeChange(priceRange)}
                                 />
-                                <label htmlFor={`price-range-${priceRange}`}>{priceRange}</label>
+                                <label htmlFor={`price-range-${priceRange}`}>{'$'.repeat(priceRange)}</label>
                             </div>
                         ))}
                     </div>
@@ -148,22 +181,30 @@ const Explore = () => {
                     Clear Filters
                 </button>
             </div>
-            <div className="search-results-container">
-            <div className="matched-restaurants">
-                    {filteredRestaurants.length > 0 ? (
-                        filteredRestaurants.map((restaurant) => (
-                            <RestaurantCard key={restaurant.yelp_google_id} restaurant={restaurant} />
-                        ))
-                    ) : (
-                        <div className="no-results-message">
-                            <p>No results found.</p>
-                            <p>Try adjusting filters or search term.</p>
-                        </div>
-                    )}
+            {loading ? (
+                <div>Loading...</div>
+            ) : error ? (
+                <div>{error}</div>
+            ) : (
+                <div className="search-results-container">
+                    <div className="matched-restaurants">
+                        {filteredRestaurants.length > 0 ? (
+                            filteredRestaurants.map((restaurant) => (
+                                <RestaurantCard key={restaurant.id} restaurant={restaurant} />
+                            ))
+                        ) : (
+                            <div className="no-results-message">
+                                <p>No results found.</p>
+                                <p>Try adjusting filters or search term.</p>
+                            </div>
+                        )}
+                    </div>
                 </div>
-            </div>
+            )}
         </div>
     );
 }
 
 export default Explore;
+
+

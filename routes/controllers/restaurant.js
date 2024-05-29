@@ -1,42 +1,44 @@
 import express from 'express';
-import models from '../../models.js'; // Ensure this path is correct
-
+import axios from 'axios';
 
 const router = express.Router();
 
+const YELP_API_KEY = 'u_WYncFeWCBqMrDo60oOG94-AXElQzmjrw2HxTjMW_5brEMs9IiD4awCB4CfzLxaAJhGKDg06uUQ4q4F8nzPMHKVh0Z3aayl67AmdR12RUscKZcWEWCJ-eqYkJ9VZnYx';
+const YELP_API_URL = 'https://api.yelp.com/v3/businesses/search';
+
 router.get('/', async (req, res) => {
-
-    const { searchQuery, selectedCuisine, selectedPriceRange, selectedRatings } = req.query;
-
-    let query = {};
-
-    if (searchQuery) {
-        query.name = { $regex: searchQuery, $options: 'i' };
-    }
-
-    if (selectedCuisine) {
-        query.cuisine = selectedCuisine;
-    }
-
-    if (selectedPriceRange) {
-        query.price_range = { $in: selectedPriceRange.split(',') };
-    }
-
-    if (selectedRatings) {
-        const ratings = selectedRatings.split(',').map(Number);
-        query.rating = {
-            $gte: Math.min(...ratings),
-            $lt: Math.max(...ratings) + 1,
-        };
-    }
+    const { searchQuery, selectedCuisine, selectedPriceRange, selectedRatings, location, distance } = req.query;
 
     try {
-        const restaurants = await models.Restaurants.find(query);
+        const response = await axios.get(YELP_API_URL, {
+            headers: {
+                Authorization: `Bearer ${YELP_API_KEY}`,
+            },
+            params: {
+                term: searchQuery || 'restaurants',
+                location: location || 'University of Washington', // Default location
+                radius: (distance || 10) * 1609, // Convert miles to meters, default 10 miles
+                categories: selectedCuisine || 'restaurants',
+                price: selectedPriceRange || undefined,
+                limit: 50,
+            },
+        });
+
+        let restaurants = response.data.businesses;
+
+        if (selectedRatings) {
+            const ratings = selectedRatings.split(',').map(Number);
+            restaurants = restaurants.filter(restaurant =>
+                restaurant.rating >= Math.min(...ratings)
+            );
+        }
+
         res.json(restaurants);
     } catch (error) {
-        console.error('Error fetching restaurants:', error);
+        console.error('Error fetching restaurants from Yelp:', error);
         res.status(500).send('Server error');
     }
 });
 
 export default router;
+

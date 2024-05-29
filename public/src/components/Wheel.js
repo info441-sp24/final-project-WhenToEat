@@ -20,6 +20,7 @@ const Wheel = () => {
     const [showCloseLobby, setShowCloseLobby] = useState(false);
     const [showSpinBtn, setShowSpinBtn] = useState(true);
     const [users, setUsers] = useState([]);
+    const [points, setPoints] = useState({});
     const [restaurants, setRestaurants] = useState([]);
     const [noNameError, setNoNameError] = useState('');
     const [noRestaurantError, setNoRestaurantError] = useState('');
@@ -28,20 +29,26 @@ const Wheel = () => {
     const [lastLobbyName, setLastLobbyName] = useState('');
     const [joinLobbyError, setJoinLobbyError] = useState('');
     const [winner, setWinner] = useState("");
+    const [currentName, setCurrentName] = useState("");
+    const [loggedIn, setLoggedIn] = useState(false);
 
     useEffect(() => {
         const handleWebSocketMessage = async (event) => {
             const data = JSON.parse(event.data);
             if (data.action === 'nameUpdated') {
-                setRestaurants(prevRestaurants => [...prevRestaurants, data.choice])
+                setRestaurants(prevRestaurants => [...prevRestaurants, data.choice]);
                 setUsers(prevLobby => [...prevLobby, data.name]);
                 setNotifications(prev => [...prev, data.message]);
-                console.log(restaurants, users, notifications)
+                setPoints(p => ({...p, [data.choice]: (p[data.choice] + 1 || 1)}));
             } else if (data.action === 'nameDisconnected') {
-                setRestaurants(prevRestaurants => prevRestaurants.filter(name => name !== data.choice))
-                setUsers(prevLobby => prevLobby.filter(name => name !== data.name));
+                setRestaurants(prevRestaurants => prevRestaurants.filter(name => name !== data.choice));
+                setUsers(prevLobby => prevLobby.filter(name => name !== data.name));    
+                setPoints(p => {
+                    const newPoints = { ...p };
+                    delete newPoints[data.choice];
+                    return newPoints;
+                });
                 setNotifications(prev => [...prev, data.message]);
-                console.log(restaurants, users, notifications)
                 try {
                     const response = await axios.delete(`/api/lobbies/removeUser`, {
                         data: {
@@ -56,6 +63,8 @@ const Wheel = () => {
             } else if (data.action === 'lobbyClosed') {
                 setNotifications(prev => [...prev, data.message]);
                 setShowSpinBtn(false);
+            } else if (data.action === 'winnerDecided') {
+                setNotifications(prev => [...prev, data.message])
             }
         };
 
@@ -106,7 +115,14 @@ const Wheel = () => {
                 setRestaurants(response.data.choices);
                 setShowSpinBtn(false);
                 setJoinedLobby(true);
-                setLastLobbyName(joinLobbyRef.current.value);
+                setCurrentName(response.data.sessionName)
+                if (response.data.sessionName !== "") {
+                    setLoggedIn(true)
+                } else {
+                    setLoggedIn(false)
+                }
+                setLastLobbyName(joinLobbyRef.current.value.trim());
+                setPoints(response.data.weights)
                 ws.send(JSON.stringify({
                     action: 'joinLobby',
                     lobbyId: response.data.lobbyId
@@ -133,12 +149,21 @@ const Wheel = () => {
         })
     }
 
-    const addName = async () => {
-        const name = nameInputRef.current.value.trim();
+    const addName = async (num) => {
         const restaurant = restaurantInputRef.current.value.trim();
-        if (name.length < 1 || restaurant.length < 1) {
-            setNoNameError("Both inputs must be filled out!");
-            return;
+        let name
+        if (num === 1) {
+            name = currentName
+            if (restaurant.length < 1) {
+                setNoNameError("Restaurant input must be filled out!");
+                return;
+            }
+        } else {
+            name = nameInputRef.current.value.trim();
+            if (name.length < 1 || restaurant.length < 1) {
+                setNoNameError("Both inputs must be filled out!");
+                return;
+            }
         }
         ws.send(JSON.stringify({
             action: 'updateName',
@@ -157,6 +182,7 @@ const Wheel = () => {
         let response = await axios.post('/api/lobbies/spinWheel', {
             name: lastLobbyName
         });
+        // setShowSpinBtn(false)
         if (response.data.status === "not enough") {
             setSpinError("Need at least 2 participants!")
         } else {
@@ -202,9 +228,29 @@ const Wheel = () => {
         setWinner("");
     };
 
+    const increasePoints = async (restaurant) => {
+        console.log("Inc")
+        const currentPoints = (points[restaurant] || 0) + 1;
+        setPoints({ ...points, [restaurant]: currentPoints });
+        let response = await axios.post('/api/lobbies/increase', {
+            name: lastLobbyName,
+            restaurant: restaurant
+        });
+    };
+
+    const decreasePoints = async (restaurant) => {
+        console.log("Dec")
+        const currentPoints = Math.max((points[restaurant] || 0) - 1, 0);
+        setPoints({ ...points, [restaurant]: currentPoints });
+        let response = await axios.post('/api/lobbies/decrease', {
+            name: lastLobbyName,
+            restaurant: restaurant
+        });
+    };
+
     return (
-        <div className="container">
-            {showWinnerPopup && <div className="overlay" />}
+        <div className="wheel-container">
+            {showWinnerPopup && <div class="overlay" />}
             {joinedLobby && (
                 <h1>Let's Choose a Restaurant!</h1>
             )}
@@ -227,24 +273,38 @@ const Wheel = () => {
             {joinedLobby && (
                 <div className="lobby">
                     <div className="lobby-name-display">
-                        <div>Lobby Name: <span style={{fontStyle: 'italic', fontWeight: 'bold' }}>{lastLobbyName}</span></div>
-                        { showCloseLobby &&  (
-                            <button onClick={closeLobby} className="close-lobby">Close Lobby</button>
+                        <div>Lobby Name: <span style={{ fontStyle: 'italic', fontWeight: 'bold' }}>{lastLobbyName}</span></div>
+                        {showCloseLobby && (
+                            <button onClick={closeLobby} class="close-lobby">Close Lobby</button>
                         )}
                     </div>
                     {!joinedWheel && (
                         <div className="join-wheel">
-                            <input ref={nameInputRef} placeholder='Your Name' /><br />
-                            <input ref={restaurantInputRef} placeholder='Choose a Restaurant' /><br />
-                            <button onClick={addName}>Join the Wheel!</button>
-                            <p className="wheel-error">{noNameError}</p>
+                            { loggedIn ? (
+                                <div>
+                                    <h2>Name: {currentName}</h2>
+                                    <input ref={restaurantInputRef} placeholder='Choose a Restaurant' /><br />
+                                    <button onClick={() => addName(1)}>Join the Wheel!</button>
+                                    <p className="wheel-error">{noNameError}</p>
+                                </div>
+                                ) : 
+                                <div>
+                                    <input ref={nameInputRef} placeholder='Your Name' /><br />
+                                    <input ref={restaurantInputRef} placeholder='Choose a Restaurant' /><br />
+                                    <button onClick={() => addName(2)}>Join the Wheel!</button>
+                                    <p className="wheel-error">{noNameError}</p>
+                                </div>
+                            }
                         </div>
                     )}
                     <h2>Lobby Notifications:</h2>
-                    <div className="notifications">
-                        {notifications.map((notification, index) => (
-                            <div key={index} className={`notification ${notification.includes("joined") ? "join" : "leave"}`}>
-                                {notification}
+                    <div className="lobby-notifications">
+                        {notifications.map((notifications, index) => (
+                            <div key={index} className={`lobby-notification ${
+                                notifications.includes("joined") ? "join" :
+                                notifications.includes("winner") ? "winner" :
+                                "leave"}`}>
+                                {notifications}
                             </div>
                         ))}
                     </div>
@@ -252,11 +312,16 @@ const Wheel = () => {
                     <div className="lobby-names">
                         {users.map((name, index) => (
                             <div key={index} className="lobby-name">
-                                {name}'s Restaurant : <span style={{ textDecoration: 'underline' }}>{restaurants[index] ? restaurants[index] : 'No choice selected'}</span>
+                                <div>{name}'s Restaurant : <span style={{ textDecoration: 'underline' }}>{restaurants[index] ? restaurants[index] : 'No choice selected'}</span></div>
+                                <div className="points-controls">
+                                    <button onClick={() => increasePoints(restaurants[index])}>∧</button>
+                                    <span>{points[restaurants[index]] || 0}</span>
+                                    <button onClick={() => decreasePoints(restaurants[index])}>∨</button>
+                                </div>
                             </div>
                         ))}
                     </div><br />
-                    { showSpinBtn && (
+                    {showSpinBtn && (
                         <button onClick={spinWheel} className='spin-wheel'>Spin The Wheel!</button>
                     )}
                     <p className='wheel-error'>{spinError}</p>
