@@ -1,5 +1,6 @@
 import express from 'express';
 import enableWs from 'express-ws';
+import mongoose from 'mongoose'
 
 const router = express();
 enableWs(router);
@@ -31,7 +32,6 @@ router.ws("/wheelSocket", (ws, res) => {
                         restaurant: "",
                     };
                     weights.push(1)
-                    console.log(weights)
                     console.log(`User ${mySocketNum} connected to lobby ${myLobbyId} via websocket`);
                     break;
                 case 'updateName':
@@ -97,9 +97,14 @@ router.get("/", async (req, res) => {
         const existingLobby = await req.models.Lobbies.findOne({ lobby_name: lobbyName });
         if (existingLobby && existingLobby.status) {
             existingLobby.save()
+            // const restaurantNames = existingLobby.choices.map(choice => choice.restaurant);
+            // const points = existingLobby.choices.map(choice => choice.weight);
             const restaurantNames = existingLobby.choices.map(choice => choice.restaurant);
-            const points = existingLobby.choices.map(choice => choice.weight);
-            console.log(req.session.isAuthenticated)
+            const points = existingLobby.choices.reduce((acc, choice) => {
+                acc[choice.restaurant] = choice.weight;
+                return acc;
+            }, {});
+            console.log("points", points)
             const sessionName = req.session.isAuthenticated ? req.session.account.name : "";
             return res.json({ "status": "success", "users": existingLobby.users, "lobbyId": existingLobby._id, "choices": restaurantNames, 
                 "weights": points, "sessionName": sessionName})
@@ -135,7 +140,6 @@ router.post("/", async (req, res) => {
 router.post("/spinWheel", async (req, res) => {
     try {
         const lobbyToSpin = await req.models.Lobbies.findOne({ lobby_name: req.body.name });
-        console.log("users in lobby:", lobbyToSpin.users, "notification list:", req.body.notis);
         let choices = lobbyToSpin.choices
         if (choices.length < 2) {
             res.json({"status" : "not enough"})
@@ -150,7 +154,6 @@ router.post("/spinWheel", async (req, res) => {
         });
         
         let randomNum = Math.floor(Math.random() * inputs.length)
-        console.log(inputs, randomNum)
         const winningChoice = inputs[randomNum];
         const winnerName = winningChoice.user_added;
         const winnerRestaurant = winningChoice.restaurant;
