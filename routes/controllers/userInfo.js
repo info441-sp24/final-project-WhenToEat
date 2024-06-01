@@ -2,7 +2,6 @@ import express from 'express';
 var router = express.Router();
 import models from '../../models.js'
 
-
 router.post("/", async (req, res, next) => {
     if (req.session.isAuthenticated) {
         let info = req.body;
@@ -20,21 +19,7 @@ router.post("/", async (req, res, next) => {
                 await newUser.save();
                 res.json({ "status": "success" });
             }
-            // if (existingUser) {
-            //     if (info.points) { 
-            //         existingUser.points = info.points;
-            //     }
-            //     await existingUser.save();
-            // } else {
-            //     let newUser = new req.models.Users({
-            //         username: req.session.account.username,
-            //         email: info.email,  
-            //         points: info.points, 
-            //         friends: info.friends || [],
-            //         created_date: new Date()
-            //     });
-            //     await newUser.save();
-            // }
+
             res.json({ "status": "success" });
         } catch (error) {
             console.log(error.message)

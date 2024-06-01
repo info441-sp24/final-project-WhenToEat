@@ -1,7 +1,5 @@
 import express from 'express';
-
 var router = express.Router();
-
 
 router.get('/myIdentity', function (req, res, next) {
     if (req.session.isAuthenticated){ 
@@ -22,7 +20,7 @@ router.get('/myIdentity', function (req, res, next) {
 
 router.get("/", async (req, res) => {
     try {
-        let users = await req.models.Users.find(); // Await the query to get the data
+        let users = await req.models.Users.find(); 
         res.json(users);
     } catch (error) {
         res.status(500).send('Server Error');

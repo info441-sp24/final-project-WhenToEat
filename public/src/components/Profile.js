@@ -8,7 +8,7 @@ const Profile = () => {
   const [userError, setUserError] = useState('');
   const [friendUsername, setFriendUsername] = useState('');
   const [notification, setNotification] = useState(null);
-  const [userHistory, setUserHistory] = useState([]); // State to hold user history
+  const [userHistory, setUserHistory] = useState([]); 
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.hash.split('?')[1]);
