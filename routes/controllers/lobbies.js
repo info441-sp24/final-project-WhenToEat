@@ -157,6 +157,13 @@ router.post("/spinWheel", async (req, res) => {
         const winningChoice = inputs[randomNum];
         const winnerName = winningChoice.user_added;
         const winnerRestaurant = winningChoice.restaurant;
+        const winnerHistory = new req.models.UserHistory({
+            user_id: winnerName,
+            restaurant_name: winnerRestaurant,
+            date_visited: new Date()
+        })
+
+        winnerHistory.save()
         broadcastNotification(lobbyToSpin._id, `The winner is ${winnerRestaurant} (${winnerName})!!!`,
             'winnerDecided', "", "", []);
         res.json({"status": "success", "winner": winnerRestaurant })

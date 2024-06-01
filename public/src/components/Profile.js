@@ -8,7 +8,7 @@ const Profile = () => {
   const [userError, setUserError] = useState('');
   const [friendUsername, setFriendUsername] = useState('');
   const [notification, setNotification] = useState(null);
-  const [userHistory, setUserHistory] = useState([]); // State to hold user history
+  const [userHistory, setUserHistory] = useState([]); 
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.hash.split('?')[1]);
@@ -20,7 +20,6 @@ const Profile = () => {
           let response = await axios.get(`/api/userInfo?username=${username}`);
           if (response.data.status === "success") {
             setUser(response.data.user);
-            setUserHistory(response.data.history); // Set user history data
           } else {
             setUserError('Failed to fetch user data');
           }
@@ -37,7 +36,25 @@ const Profile = () => {
       }
     };
 
+    const fetchUserRestaurants = async () => {
+      try {
+        console.log('Fetching user history for username:', username); // Debugging log
+        const restaurantsResponse = await axios.get(`/api/userInfo/userHistory?username=${username}`);
+        console.log('User history response:', restaurantsResponse.data); // Debugging log
+
+        if (restaurantsResponse.data.status === 'success') {
+          setUserHistory(restaurantsResponse.data.restaurants);
+        } else {
+          setUserError('Failed to fetch restaurants data');
+        }
+      } catch (error) {
+        console.error('Failed to fetch user restaurants', error);
+        setUserError('An error occurred while fetching restaurants data');
+      }
+    };
+
     fetchUserData();
+    fetchUserRestaurants();
 
   }, []);
 
@@ -79,17 +96,17 @@ const Profile = () => {
       setNotification('Failed to remove friend');
     }
   };
-
+  console.log(userHistory);
   return (
     <div>
       {notification && <Notification message={notification} onClose={() => setNotification(null)} />}
       {user ? (
         <div className="profile-container">
-          <div className="profile-info">
-            <h1>{user.username}</h1>
-            <p>Points: {user.points}</p>
-          </div>
           <div>
+            <div className="profile-info">
+              <h1>{user.username}</h1>
+              <p>Points: {user.points}</p>
+            </div>
             <div className="addFriend">
               <h1>Add a Friend!</h1>
               <input 
@@ -111,11 +128,11 @@ const Profile = () => {
           </div>
           <div>
             <h1>Restaurants Visited</h1>
-            <ul>
-              {userHistory.map((visit, index) => (
-                <li key={index}>
-                  <p>Restaurant Name: {visit.restaurant_name}</p>
-                  <p>Date Visited: {new Date(visit.date_visited).toLocaleDateString()}</p>
+            <ul className="restaurants-container">
+              {userHistory.map((item) => (
+                <li key={item._id} className="restaurant-card">
+                  <h3>Restaurant Name: {item.restaurant_name}</h3>
+                  <p>Date Visited: {new Date(item.date_visited).toLocaleDateString()}</p>
                 </li>
               ))}
             </ul>

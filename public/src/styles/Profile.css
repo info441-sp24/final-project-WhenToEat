@@ -63,6 +63,34 @@
     background-color: #b30000;
 }
 
+.restaurants-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+    padding: 20px;
+  }
+  
+  .restaurant-card {
+    flex: 1 1 300px; /* Flex grow, flex shrink, flex basis */
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    margin: 10px;
+    padding: 20px;
+    border-radius: 8px;
+    background-color: white;
+    box-sizing: border-box;
+  }
+  
+  .restaurant-card h3 {
+    margin-top: 0;
+    color: #333;
+  }
+  
+  .restaurant-card p {
+    color: #666;
+    font-size: 0.9em;
+  }
+
 @media (min-width: 768px) {
     .profile-container {
         display: grid;

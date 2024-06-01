@@ -18,15 +18,4 @@ const Home = () => {
     )
   }
 
-  
-// async function loadInfo() {
-//     try {
-//       const response = await axios.get("/api/friends");
-//       document.getElementById("info").innerHTML = response.data;
-//     } catch (error) {
-//       console.error("Error fetching data:", error);
-//       document.getElementById("info").innerHTML = "Error loading data";
-//     }
-//   }
-  
   export default Home
