@@ -64,7 +64,8 @@ const Explore = () => {
             selectedRatings: selectedRatings.join(','),
         };
         debouncedApplyFilters(params);
-    }, [searchQuery, location, distance, selectedCuisine, selectedPriceRange, selectedRatings]);
+    }, [searchQuery, location, distance, selectedCuisine, selectedPriceRange, selectedRatings, debouncedApplyFilters]);
+    
 
     const handleSearchChange = (event) => {
         setSearchQuery(event.target.value);
