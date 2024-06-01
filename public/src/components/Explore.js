@@ -42,7 +42,7 @@ const Explore = () => {
                 setFilteredRestaurants(data);
             } catch (error) {
                 console.error('Error applying filters:', error);
-                setError('Error applying filters');
+                setError('Ran out of daily YELP API calls');
             } finally {
                 setLoading(false);
             }
