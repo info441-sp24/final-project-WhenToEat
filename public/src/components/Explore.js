@@ -9,11 +9,13 @@ const Explore = () => {
     const [distance, setDistance] = useState(10);
     const [filteredRestaurants, setFilteredRestaurants] = useState([]);
     const [selectedCuisine, setSelectedCuisine] = useState("");
-    const [uniqueCuisines, setUniqueCuisines] = useState([]);
+    // const [uniqueCuisines, setUniqueCuisines] = useState([]);
     const [selectedPriceRange, setSelectedPriceRange] = useState([]);
     const [selectedRatings, setSelectedRatings] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+
+    const commonCuisines = ["Asian", "Italian", "Mexican", "American", "Indian", "Chinese", "Japanese", "Mediterranean", "Thai"];
 
     const fetchRestaurants = async () => {
         setLoading(true);
@@ -23,8 +25,8 @@ const Explore = () => {
             const data = await response.json();
             setFilteredRestaurants(data);
 
-            const cuisines = [...new Set(data.map(restaurant => restaurant.categories[0]?.title))];
-            setUniqueCuisines(cuisines);
+            // const cuisines = [...new Set(data.map(restaurant => restaurant.categories[0]?.title))];
+            // setUniqueCuisines(cuisines);
         } catch (error) {
             console.error('Error fetching restaurants:', error);
             setError('Error fetching restaurants');
@@ -141,7 +143,7 @@ const Explore = () => {
                             className="form-control"
                         >
                             <option value="">All Cuisines</option>
-                            {uniqueCuisines.map((cuisine) => (
+                            {commonCuisines.map((cuisine) => (
                                 <option key={cuisine} value={cuisine}>
                                     {cuisine}
                                 </option>
