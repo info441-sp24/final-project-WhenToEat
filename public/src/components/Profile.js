@@ -8,7 +8,6 @@ const Profile = () => {
   const [userError, setUserError] = useState('');
   const [friendUsername, setFriendUsername] = useState('');
   const [notification, setNotification] = useState(null);
-  const [restaurants, setRestaurants] = useState(null);
   const [userHistory, setUserHistory] = useState([]); // State to hold user history
 
   useEffect(() => {
@@ -37,23 +36,6 @@ const Profile = () => {
         }
       }
     };
-
-    // const fetchUserRestaurants = async (username) => {
-    //   try {
-    //     console.log('Fetching user history for username:', username); // Debugging log
-    //     const restaurantsResponse = await axios.get(`/api/userInfo/userHistory?username=${username}`);
-    //     console.log('User history response:', restaurantsResponse.data); // Debugging log
-
-    //     if (restaurantsResponse.data.status === 'success') {
-    //       setRestaurants(restaurantsResponse.data.restaurants);
-    //     } else {
-    //       setUserError('Failed to fetch restaurants data');
-    //     }
-    //   } catch (error) {
-    //     console.error('Failed to fetch user restaurants', error);
-    //     setUserError('An error occurred while fetching restaurants data');
-    //   }
-    // };
 
     fetchUserData();
 
