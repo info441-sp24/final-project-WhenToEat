@@ -17,7 +17,7 @@ As people who love eating and trying out new places, it can be incredibly diffic
 ## Architectural Diagram
 We will use rest API to take user input as well as mongodb as the database to store user and restaurant information.
 
-![WhenToEat Architectural Diagram](https://github.com/info441-sp24/final-project-WhenToEat/blob/main/public/public/img/User%20Flow%20Chart%20-%20User%20Flow%20Chart.jpg?raw=true)
+![WhenToEat Architectural Diagram](https://github.com/info441-sp24/final-project-WhenToEat/blob/main/public/public/img/User%20Flow.jpg?raw=true)
 
 
 ## Data Flow
