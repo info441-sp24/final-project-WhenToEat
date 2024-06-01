@@ -46,8 +46,6 @@ const Wheel = () => {
                 lobbyName: lastLobbyName
             }));
             handleLobbyClosed();
-        } else {
-            console.log('could not close lobby')
         }
     }, [lastLobbyName]);
 
@@ -91,7 +89,6 @@ const Wheel = () => {
                             username: data.name
                         }
                     });
-                    console.log('User removed from lobby:', response.data);
                 } catch (error) {
                     console.error('Error removing user from lobby:', error);
                 }
@@ -147,12 +144,9 @@ const Wheel = () => {
                 setShowCloseLobby(true);
                 setShowSpinBtn(true);
                 setCurrentName(response.data.sessionName)
-                console.log(response.data.sessionName)
                 if (response.data.sessionName !== "") {
-                    console.log("true")
                     setLoggedIn(true)
                 } else {
-                    console.log("false")
                     setLoggedIn(false)
                 }
                 ws.send(JSON.stringify({
@@ -194,9 +188,7 @@ const Wheel = () => {
                     setLoggedIn(false)
                 }
                 setLastLobbyName(joinLobbyRef.current.value.trim());
-                console.log("getting points", response.data.weights)
                 setPoints(response.data.weights)
-                console.log(points.toString())
                 ws.send(JSON.stringify({
                     action: 'joinLobby',
                     lobbyId: response.data.lobbyId
@@ -209,7 +201,6 @@ const Wheel = () => {
         } catch (error) {
             console.error('Error joining lobby:', error);
         }
-        console.log(loggedIn)
         if (loggedIn) {
             try {
                 let response = await axios.get(`/api/userInfo?name=${currentName}`);
