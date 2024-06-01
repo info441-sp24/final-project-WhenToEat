@@ -18,7 +18,7 @@ router.get('/', async (req, res) => {
                 term: searchQuery || 'restaurants',
                 location: location || 'University of Washington', // Default location
                 radius: (distance || 10) * 1609, // Convert miles to meters, default 10 miles
-                categories: selectedCuisine || 'restaurants',
+                categories: selectedCuisine.toLowerCase() || 'restaurants',
                 price: selectedPriceRange || undefined,
                 limit: 50,
             },

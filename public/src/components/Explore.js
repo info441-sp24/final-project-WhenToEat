@@ -9,7 +9,6 @@ const Explore = () => {
     const [distance, setDistance] = useState(10);
     const [filteredRestaurants, setFilteredRestaurants] = useState([]);
     const [selectedCuisine, setSelectedCuisine] = useState("");
-    // const [uniqueCuisines, setUniqueCuisines] = useState([]);
     const [selectedPriceRange, setSelectedPriceRange] = useState([]);
     const [selectedRatings, setSelectedRatings] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -24,9 +23,6 @@ const Explore = () => {
             if (!response.ok) throw new Error('Network response was not ok');
             const data = await response.json();
             setFilteredRestaurants(data);
-
-            // const cuisines = [...new Set(data.map(restaurant => restaurant.categories[0]?.title))];
-            // setUniqueCuisines(cuisines);
         } catch (error) {
             console.error('Error fetching restaurants:', error);
             setError('Error fetching restaurants');

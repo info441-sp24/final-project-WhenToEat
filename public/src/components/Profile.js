@@ -38,9 +38,7 @@ const Profile = () => {
 
     const fetchUserRestaurants = async () => {
       try {
-        console.log('Fetching user history for username:', username); // Debugging log
         const restaurantsResponse = await axios.get(`/api/userInfo/userHistory?username=${username}`);
-        console.log('User history response:', restaurantsResponse.data); // Debugging log
 
         if (restaurantsResponse.data.status === 'success') {
           setUserHistory(restaurantsResponse.data.restaurants);
@@ -96,7 +94,6 @@ const Profile = () => {
       setNotification('Failed to remove friend');
     }
   };
-  console.log(userHistory);
   return (
     <div>
       {notification && <Notification message={notification} onClose={() => setNotification(null)} />}
