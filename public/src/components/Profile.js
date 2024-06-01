@@ -102,11 +102,11 @@ const Profile = () => {
       {notification && <Notification message={notification} onClose={() => setNotification(null)} />}
       {user ? (
         <div className="profile-container">
-          <div className="profile-info">
-            <h1>{user.username}</h1>
-            <p>Points: {user.points}</p>
-          </div>
           <div>
+            <div className="profile-info">
+              <h1>{user.username}</h1>
+              <p>Points: {user.points}</p>
+            </div>
             <div className="addFriend">
               <h1>Add a Friend!</h1>
               <input 
